@@ -1,0 +1,101 @@
+/* Estilos base del sitio en Vercel: valores que en Claude entregaba la plataforma (espacios, tamaños, fuentes)
+   y los controles propios (selector, carga, acceso de editor, aviso). Los colores del club están en index.html (.tb). */
+:root {
+  --cds-gap-xs: 4px;
+  --cds-gap-sm: 8px;
+  --cds-gap-md: 12px;
+  --cds-gap-lg: 16px;
+  --cds-gap-xl: 24px;
+  --cds-pad-xs: 4px;
+  --cds-pad-sm: 6px;
+  --cds-pad-md: 12px;
+  --cds-pad-lg: 16px;
+  --cds-pad-xl: 24px;
+  --cds-radius: 12px;
+  --cds-font-size-caption: 12px;
+  --cds-font-size-body: 14px;
+  --cds-font-size-heading: 18px;
+  --cds-font-size-title: 32px;
+  --cds-font-weight-medium: 600;
+  --cds-shadow-popover: 0 12px 32px rgba(5, 10, 35, 0.45);
+  --cds-dur-slow: 0.25s;
+  --cds-ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --font-anthropic-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-anthropic-serif: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
+  color-scheme: dark;
+}
+
+html, body { margin: 0; background: #1c2f6e; color: #ffffff; }
+body {
+  font-family: var(--font-anthropic-sans);
+  font-size: var(--cds-font-size-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+#dash-root { min-height: 100vh; }
+
+/* Selector con flecha propia */
+.dash-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  font-size: var(--cds-font-size-body);
+  color: var(--color-fg, #ffffff);
+  background-color: var(--color-bg, #1c2f6e);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  border: 1px solid var(--color-border-line, #3a52a3);
+  border-radius: 6px;
+  padding: 7px 32px 7px 9px;
+  min-width: 0;
+}
+
+/* Marcador mientras cargan los datos */
+.dash-skeleton {
+  color: transparent !important;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 2.5em;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dash-skeleton { animation: tb-latido 1.2s ease-in-out infinite; }
+}
+@keyframes tb-latido { 50% { opacity: 0.5; } }
+
+/* Acceso de editor (en el encabezado) */
+.tb-acceso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--cds-font-size-caption); }
+.tb-acceso-btn, .tb-acceso-entrar {
+  font: inherit; font-weight: 600; cursor: pointer;
+  padding: 5px 12px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55); background: transparent; color: #ffffff;
+}
+.tb-acceso-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.tb-acceso-entrar { background: #ffffff; color: #1c2f6e; border-color: #ffffff; }
+.tb-acceso-entrar:disabled { opacity: 0.6; cursor: default; }
+.tb-acceso-ok { display: inline-flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 600; }
+.tb-acceso-ok::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #4ade9a; }
+.tb-acceso-link { font: inherit; background: none; border: 0; padding: 0; color: #ffffff; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; font-weight: 400; }
+.tb-acceso-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tb-acceso-form input {
+  font: inherit; color: #ffffff; background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.45); border-radius: 6px; padding: 5px 9px; min-width: 0; width: 180px;
+}
+.tb-acceso-error { color: #ffb0b0; font-weight: 600; }
+
+/* Aviso si la base de datos no responde */
+.tb-aviso {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 201, 77, 0.6);
+  background: rgba(255, 201, 77, 0.12);
+  color: #ffffff;
+  font-size: var(--cds-font-size-caption);
+  line-height: 1.5;
+}

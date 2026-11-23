@@ -1,0 +1,2437 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Toros de Pilauco</title>
+<meta name="description" content="Plantel, ligas, pagos y camisetas del Club Deportivo Toros de Pilauco, rama de básquetbol.">
+<meta name="theme-color" content="#1c2f6e">
+<link rel="icon" type="image/png" href="img/escudo.png">
+<link rel="apple-touch-icon" href="img/escudo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="base.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="runtime.js"></script>
+</head>
+<body>
+<div id="dash-root">
+<style>
+/* Layout: encabezado del equipo y pestañas (Jugadores, Pagos, Ligas, Camisetas). Las ligas son datos: cada una tiene su tarjeta con tabla de meses e inscripción, y se pueden agregar ligas nuevas desde la página. */
+.tb { container-type: inline-size; display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.tb p, .tb h1, .tb h2, .tb h3, .tb h4, .tb ul, .tb dl, .tb dd { margin: 0; }
+.tb [hidden] { display: none !important; }
+.tb-head { display: grid; gap: var(--cds-gap-sm); max-width: 64ch; }
+.tb-eyebrow { font-size: var(--cds-font-size-caption); letter-spacing: .1em; text-transform: uppercase; color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+.tb-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; text-wrap: balance; }
+.tb-lede { font-size: var(--cds-font-size-body); line-height: 1.6; }
+.tb-lede b { font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+.tb-lede .tb-total { color: var(--color-bad); }
+
+.tb-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--color-border-line); overflow-x: auto; scrollbar-width: none; }
+.tb-tab { font: inherit; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); padding: 10px 14px; margin-bottom: -1px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--color-fg-muted); cursor: pointer; white-space: nowrap; }
+.tb-tab:hover { color: var(--color-fg); }
+.tb-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.tb-panel { display: grid; gap: calc(var(--cds-gap-xl) * 1.25); min-width: 0; }
+
+.tb-sec { display: grid; gap: var(--cds-gap-md); min-width: 0; }
+.tb-sec-head { display: grid; gap: var(--cds-gap-xs); }
+.tb-sec-head h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); text-wrap: balance; }
+.tb-sec-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.tb-sec-top-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.tb-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; max-width: 72ch; }
+.tb-note b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+
+/* Botones y campos */
+.tb-btn { font: inherit; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); padding: 7px 14px; border-radius: 999px; border: 1px solid var(--color-border-line); background: transparent; color: var(--color-fg); cursor: pointer; }
+.tb-btn:hover { border-color: var(--color-fg-muted); }
+.tb-btn.is-primary, .tb-btn[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.tb-btn:disabled { opacity: .5; cursor: default; }
+.tb-link { font: inherit; background: none; border: 0; padding: 0; color: var(--color-fg); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.tb-link.is-bad { color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
+.tb-link:disabled { opacity: .5; cursor: default; }
+.tb-field { display: grid; gap: 4px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-width: 0; }
+.tb-field textarea { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: 6px; padding: 7px 9px; width: 100%; box-sizing: border-box; resize: vertical; min-height: 6em; }
+.tb-field input, .tb-field select:not(.dash-select) { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: 6px; padding: 7px 9px; min-width: 0; width: 100%; box-sizing: border-box; }
+.tb-field .dash-select { width: 100%; }
+.tb-checks { display: flex; flex-wrap: wrap; gap: 4px 16px; border: 0; padding: 0; margin: 0; min-width: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-checks legend { padding: 0; margin-bottom: 4px; }
+.tb-checks label, .tb-check-lista label { display: inline-flex; align-items: center; gap: 6px; color: var(--color-fg); font-size: var(--cds-font-size-body); cursor: pointer; }
+.tb-check-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 130px), 1fr)); gap: 4px 12px; max-height: 230px; overflow: auto; padding: 8px 10px; border: 1px solid var(--color-border-line); border-radius: 6px; }
+.tb-acciones { display: flex; flex-wrap: wrap; gap: 8px; padding-top: var(--cds-gap-xs); }
+.tb-msg-error { font-size: var(--cds-font-size-caption); color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
+.tb-quitar { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bad) 15%, transparent); color: var(--color-bad); cursor: pointer; flex: none; }
+.tb-quitar:hover { background: var(--color-bad); color: #ffffff; }
+.tb-quitar:focus-visible { outline: 2px solid var(--color-bad); outline-offset: 2px; }
+.tb.sin-permiso .tb-solo-editor, .tb.sin-permiso .tb-quitar, .tb.sin-permiso [data-restaurar] { display: none !important; }
+
+/* Chips y leyenda */
+.tb-legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-legend li { display: flex; align-items: center; gap: 6px; }
+.tb-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); white-space: nowrap; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.tb-chip.is-ok { background: color-mix(in srgb, var(--color-ok) 16%, transparent); color: color-mix(in srgb, var(--color-ok) 70%, var(--color-fg)); }
+.tb-chip.is-bad { background: color-mix(in srgb, var(--color-bad) 16%, transparent); color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
+.tb-chip.is-warn { background: color-mix(in srgb, var(--color-warn) 20%, transparent); color: color-mix(in srgb, var(--color-warn) 60%, var(--color-fg)); }
+.tb-chip.is-none { color: var(--color-fg-muted); padding-inline: 4px; }
+.tb-chip.is-liga { background: color-mix(in srgb, var(--color-fg) 7%, transparent); color: var(--color-fg); font-weight: 400; }
+.tb-ast { color: var(--color-warn); font-weight: var(--cds-font-weight-medium); margin-inline-start: 1px; }
+.tb-chip.is-editado::after, .tb-mes.is-editado::after { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: currentColor; margin-inline-start: 4px; vertical-align: middle; }
+.tb-mes.is-editado::after { margin-inline-start: 2px; width: 4px; height: 4px; }
+
+/* Jugadores */
+.tb-plantel-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm) var(--cds-gap-lg); }
+.tb-filtros { display: flex; flex-wrap: wrap; gap: 6px; }
+.tb-filtros-ligas { display: contents; }
+.tb-filtro { font: inherit; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); padding: 5px 12px; border-radius: 999px; border: 1px solid var(--color-border-line); background: transparent; color: var(--color-fg); cursor: pointer; font-variant-numeric: tabular-nums; }
+.tb-filtro:hover { border-color: var(--color-fg-muted); }
+.tb-filtro[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.tb-filtro .tb-cuenta { opacity: .65; margin-inline-start: 5px; }
+.tb-plantel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: var(--cds-gap-md); }
+.tb-plantel { list-style: none; padding: 0; margin: 0; display: contents; }
+.tb-plantel > .tb-msg { grid-column: 1 / -1; }
+.tb-player { position: relative; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg) var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+.tb-player.con-deuda { border-color: color-mix(in srgb, var(--color-bad) 40%, var(--color-border-line)); }
+.tb-player > .tb-quitar { position: absolute; top: 8px; right: 8px; }
+.tb-player-top { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--cds-gap-md); padding-inline-end: 22px; }
+.tb-player-num { display: grid; place-items: center; width: 50px; height: 54px; border-radius: 14px 14px 7px 7px; border: 1px solid var(--color-border-line); background: color-mix(in srgb, var(--color-fg) 5%, var(--color-panel)); font-family: var(--font-anthropic-serif); font-size: 1.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tb-player-num.is-vacio { color: var(--color-fg-muted); font-size: 1.1rem; }
+.tb-player-num.is-varios { font-size: 1rem; }
+.tb-player-id { display: grid; gap: 2px; min-width: 0; }
+.tb-player-name { font-size: 1.1rem; font-weight: var(--cds-font-weight-medium); line-height: 1.25; overflow-wrap: anywhere; }
+.tb-player-ligas { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-player-estado { display: flex; flex-wrap: wrap; gap: 6px; }
+.tb-pm { display: grid; gap: 6px; padding-top: var(--cds-gap-xs); border-top: 1px solid var(--color-border-line); }
+.tb-pm-title { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: var(--cds-font-weight-medium); padding-top: var(--cds-gap-xs); }
+.tb-pm-filas { display: grid; gap: 6px; }
+.tb-pm-row { display: grid; grid-template-columns: 5.6em minmax(0, 1fr); align-items: start; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); }
+.tb-pm-liga { color: var(--color-fg-muted); padding-top: 4px; overflow-wrap: anywhere; }
+.tb-pm-meses { display: flex; flex-wrap: wrap; gap: 3px; }
+.tb-mes { flex: 1 0 30px; display: block; text-align: center; font-size: 11px; font-weight: var(--cds-font-weight-medium); line-height: 1; padding: 5px 0; border-radius: 5px; border: 1px solid transparent; white-space: nowrap; overflow: hidden; }
+.tb-mes.is-ok { background: color-mix(in srgb, var(--color-ok) 20%, transparent); color: color-mix(in srgb, var(--color-ok) 70%, var(--color-fg)); }
+.tb-mes.is-bad { background: color-mix(in srgb, var(--color-bad) 20%, transparent); color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
+.tb-mes.is-warn { background: color-mix(in srgb, var(--color-warn) 24%, transparent); color: color-mix(in srgb, var(--color-warn) 60%, var(--color-fg)); }
+.tb-mes.is-none { border: 1px dashed color-mix(in srgb, var(--color-fg-muted) 60%, transparent); color: var(--color-fg-muted); }
+.tb-mes.is-fuera { color: color-mix(in srgb, var(--color-fg-muted) 40%, transparent); }
+.tb-legend .tb-mes { display: inline-block; flex: none; padding: 4px 7px; }
+.tb-player-insc { display: grid; gap: 4px; }
+.tb-player-meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tb-player-alias { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-style: italic; }
+.tb-player-pie { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.tb-player-pie:not(:has(> :not([hidden]))) { display: none; }
+
+.tb-add { border: 1.5px dashed var(--color-border-line); border-radius: var(--cds-radius); display: grid; min-width: 0; min-height: 190px; }
+.tb-add-abrir { font: inherit; display: grid; place-content: center; justify-items: center; gap: var(--cds-gap-sm); width: 100%; min-height: 190px; background: none; border: 0; border-radius: inherit; color: var(--color-fg-muted); cursor: pointer; }
+.tb-add-abrir:hover { color: var(--color-fg); background: color-mix(in srgb, var(--color-fg) 4%, transparent); }
+.tb-add-mas { display: grid; place-items: center; width: 50px; height: 54px; border-radius: 14px 14px 7px 7px; border: 1.5px dashed currentColor; font-size: 1.9rem; line-height: 1; font-weight: 300; }
+.tb-add-label { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.tb-form { display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+.tb-add .tb-form { padding: var(--cds-pad-md) var(--cds-pad-lg) var(--cds-pad-lg); }
+.tb-form h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+
+.tb-quitados { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-quitados summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+.tb-quitados > * + * { margin-top: var(--cds-gap-sm); }
+.tb-quitados-lista { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.tb-quitados-lista li { display: inline-flex; align-items: center; gap: 10px; padding: 4px 6px 4px 12px; border: 1px solid var(--color-border-line); border-radius: 999px; color: var(--color-fg); }
+
+/* Pagos */
+.tb-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--cds-gap-md); }
+.tb-tiles-ligas { display: contents; }
+.tb-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; }
+.tb-tile-label { font-size: var(--cds-font-size-caption); text-transform: uppercase; letter-spacing: .07em; color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+.tb-tile-num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 2.1rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--color-bad); }
+.tb-tile.is-al-dia .tb-tile-num { color: var(--color-ok); }
+.tb-tile-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-tile-foot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.tb-tile-foot b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.tb-bar { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--color-bad) 28%, transparent); overflow: hidden; margin-block: var(--cds-gap-sm) var(--cds-gap-xs); }
+.tb-bar > span { display: block; height: 100%; background: var(--color-ok); border-radius: 3px; }
+
+.tb-scroll { overflow-x: auto; min-width: 0; }
+.tb-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.tb-table th, .tb-table td { text-align: left; padding: var(--cds-pad-sm) var(--cds-pad-md); border-bottom: 1px solid var(--color-border-line); vertical-align: middle; }
+.tb-table thead th { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.tb-table .num { text-align: right; white-space: nowrap; }
+.tb-table td.tb-muted { color: var(--color-fg-muted); }
+.tb-msg td, li.tb-msg { color: var(--color-fg-muted); text-align: center; padding-block: var(--cds-pad-lg); font-size: var(--cds-font-size-caption); }
+.tb-amt { display: grid; grid-template-columns: 1fr; align-items: center; min-width: 7.5em; }
+.tb-amt > * { grid-area: 1 / 1; }
+.tb-amt i { justify-self: end; height: 1.6em; border-radius: 4px; opacity: .2; }
+.tb-amt span { position: relative; padding-inline-end: 6px; font-weight: var(--cds-font-weight-medium); }
+.tb-detalle { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.5; min-width: 16em; }
+
+/* Ligas */
+.tb-ligas { display: grid; grid-template-columns: 1fr; gap: var(--cds-gap-lg); }
+.tb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-md); align-content: start; min-width: 0; }
+.tb-card.tb-liga { display: block; padding: 0; }
+.tb-liga-sum { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--cds-gap-sm) var(--cds-gap-md); padding: var(--cds-pad-md) var(--cds-pad-lg); border-radius: var(--cds-radius); }
+.tb-liga-sum::-webkit-details-marker { display: none; }
+.tb-liga-sum::marker { content: ""; }
+.tb-liga-sum:hover { background: color-mix(in srgb, var(--color-fg) 3%, transparent); }
+.tb-liga[open] > .tb-liga-sum { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.tb-chevron { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--color-border-line); color: var(--color-fg-muted); }
+.tb-liga[open] .tb-chevron { transform: rotate(90deg); }
+@media (prefers-reduced-motion: no-preference) { .tb-chevron { transition: transform var(--cds-dur-slow, .2s) var(--cds-ease-out, ease); } }
+.tb-liga-titulo { display: grid; gap: 4px; min-width: 0; }
+.tb-liga-titulo h3 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); text-wrap: balance; }
+.tb-liga-cuotas { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-liga-cuotas b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+.tb-liga-stats { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 12px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.tb-liga-stats > span > b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+@container (max-width: 560px) { .tb-liga-sum { grid-template-columns: auto minmax(0, 1fr); } .tb-liga-stats { grid-column: 2; justify-content: flex-start; } }
+.tb-liga-cuerpo { display: grid; gap: var(--cds-gap-md); padding: var(--cds-pad-sm) var(--cds-pad-lg) var(--cds-pad-lg); min-width: 0; }
+.tb-liga-acciones { display: flex; align-items: center; justify-content: flex-end; gap: 12px; font-size: var(--cds-font-size-caption); }
+.tb-liga-confirmar { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-matrix { width: 100%; min-width: 470px; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+.tb-matrix th, .tb-matrix td { padding: 5px 6px; text-align: center; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.tb-matrix thead th { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); text-transform: uppercase; letter-spacing: .05em; }
+.tb-matrix th:first-child { text-align: left; position: sticky; left: 0; background: var(--color-panel); z-index: 1; padding-inline-end: var(--cds-pad-md); }
+.tb-matrix tbody th { font-weight: 400; }
+.tb-matrix .tb-col-insc { border-inline-end: 2px solid var(--color-border-line); }
+.tb-matrix tfoot th, .tb-matrix tfoot td { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); border-bottom: 0; padding-block: 4px; }
+.tb-matrix tfoot tr:first-child th, .tb-matrix tfoot tr:first-child td { border-top: 2px solid var(--color-border-line); padding-top: 8px; }
+.tb-matrix tfoot td { color: var(--color-fg); }
+.tb-matrix tfoot .tb-mx-pend td { color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
+.tb-matrix button.tb-chip { font: inherit; font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); border: 0; cursor: default; }
+.tb-matrix button.tb-chip.is-none { background: none; }
+.tb-celda-vacia { display: none; font: inherit; font-size: var(--cds-font-size-caption); width: 28px; line-height: 1.5; border-radius: 999px; border: 1px dashed var(--color-border-line); background: none; color: var(--color-fg-muted); cursor: pointer; }
+.tb-liga.editando .tb-celda-vacia { display: inline-block; }
+.tb-liga.editando .tb-matrix button.tb-chip { cursor: pointer; }
+.tb-liga.editando .tb-matrix button.tb-chip:hover, .tb-liga.editando .tb-celda-vacia:hover { outline: 2px solid color-mix(in srgb, var(--color-fg) 40%, transparent); outline-offset: 1px; }
+.tb-liga.editando { border-color: color-mix(in srgb, var(--color-fg) 35%, var(--color-border-line)); }
+.tb-matrix .is-sel { outline: 2px solid var(--color-fg) !important; outline-offset: 1px; }
+.tb-de { color: var(--color-fg-muted); }
+.tb-notas { list-style: none; padding: 0; display: grid; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-notas:empty { display: none; }
+.tb-liga-form { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.tb-form-grid { display: grid; grid-template-columns: 1fr; gap: var(--cds-gap-sm) var(--cds-gap-md); }
+@container (min-width: 640px) { .tb-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tb-form-grid .tb-ancho { grid-column: 1 / -1; } }
+.tb-editor { position: sticky; bottom: 12px; z-index: 5; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: grid; gap: var(--cds-gap-sm); background: var(--color-panel); box-shadow: var(--cds-shadow-popover); min-width: 0; }
+.tb-editor-titulo { font-weight: var(--cds-font-weight-medium); }
+.tb-editor-opciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.tb-editor-campos { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); }
+.tb-editor-campos .tb-field { flex: 1 1 170px; }
+
+/* Camisetas */
+.tb-num-cell { font-family: var(--font-anthropic-serif); font-size: 1.25rem; line-height: 1; }
+.tb-dorsal { text-transform: uppercase; letter-spacing: .08em; font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-caption); }
+.tb-modelo { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tb-sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--color-border-line); background: var(--color-panel); }
+.tb-sw.is-blanca { background: #ffffff; border-color: #b9b9b9; }
+.tb-sw.is-negra { background: #161616; border-color: #161616; }
+.tb-sw.is-old { background: repeating-linear-gradient(45deg, var(--color-fg-muted) 0 2px, transparent 2px 4px); }
+.tb-nums { display: grid; grid-template-columns: 1fr; gap: var(--cds-gap-lg); }
+@container (min-width: 900px) { .tb-nums { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tb-num-group { display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+.tb-num-group h3 { display: flex; align-items: center; gap: 8px; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.tb-num-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tb-num-cuenta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.tb-num-cuenta::before { content: "· "; }
+.tb-equipo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--cds-gap-md); }
+.tb-equipo-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-md); align-content: start; min-width: 0; }
+.tb-equipo-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.tb-equipo-top h3 { display: flex; align-items: center; gap: 8px; font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+.tb-equipo-num { font-family: var(--font-anthropic-serif); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tb-equipo-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-jersey { position: relative; }
+.tb-jersey.is-agregada { border-style: dashed; }
+.tb-quitar.tb-quitar-mini { position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; background: var(--color-bad); color: #ffffff; box-shadow: 0 0 0 2px var(--color-panel); opacity: 0; z-index: 1; }
+.tb-jersey:hover .tb-quitar-mini, .tb-jersey:focus-within .tb-quitar-mini { opacity: 1; }
+@media (hover: none) { .tb-quitar.tb-quitar-mini { opacity: 1; } }
+.tb-jersey-add { display: grid; }
+.tb-jersey-add button { font: inherit; width: 66px; min-height: 52px; border: 1.5px dashed var(--color-border-line); border-radius: 12px 12px 6px 6px; background: none; color: var(--color-fg-muted); font-size: 1.4rem; font-weight: 300; line-height: 1; cursor: pointer; }
+.tb-jersey-add.is-mini button { width: 44px; min-height: 44px; }
+.tb-jersey-add button:hover { color: var(--color-fg); border-color: var(--color-fg-muted); }
+.tb-jersey.is-mini { width: 44px; padding: 7px 2px 6px; }
+.tb-jersey[data-camisa-chip] { cursor: pointer; }
+.tb.sin-permiso .tb-jersey[data-camisa-chip] { cursor: default; }
+.tb-jersey[data-camisa-chip]:hover { outline: 2px solid color-mix(in srgb, var(--color-fg) 35%, transparent); outline-offset: 1px; }
+.tb-jersey.is-prestada { opacity: .45; border-style: dashed; }
+.tb-jersey.is-prestada::before { content: ""; position: absolute; top: 4px; left: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--color-warn); }
+.tb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tb-hace { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-inline-start: 6px; }
+.tb-jersey.is-mini b { font-size: 1.2rem; }
+.tb-jersey { display: grid; justify-items: center; gap: 3px; width: 66px; padding: 8px 4px 6px; border-radius: 12px 12px 6px 6px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); }
+.tb-jersey b { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tb-jersey small { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit; opacity: .8; }
+.tb-jersey.is-sin small { font-style: italic; text-transform: none; letter-spacing: 0; opacity: .6; }
+.tb-jersey.is-blanca { background: #ffffff; color: #161616; border-color: #c4c4c4; }
+.tb-jersey.is-negra { background: #161616; color: #f4f4f4; border-color: #3a3a3a; }
+
+.tb-details { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-details summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+.tb-details ul { padding-inline-start: 1.2em; margin-top: var(--cds-gap-sm); display: grid; gap: 4px; line-height: 1.5; max-width: 80ch; }
+.tb :focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+
+/* Colores del Club Deportivo Toros de Pilauco: azul marino del escudo y las publicaciones, con blanco. Una sola apariencia, igual con el visor en modo claro u oscuro. */
+#dash-root { --dash-gutter: 0; }
+.tb {
+  --tb-gutter: clamp(16px, 4vw, 40px);
+  --tb-marca: #22388a;
+  --tb-marca-oscuro: #162660;
+  --color-bg: #1c2f6e;
+  --color-panel: #243a82;
+  --color-fg: #ffffff;
+  --color-fg-muted: #bcc7ea;
+  --color-border-line: #3a52a3;
+  --color-ok: #4ade9a;
+  --color-warn: #ffc94d;
+  --color-bad: #ff7b7b;
+  --tb-acento: #ffffff;
+  --tb-acento-texto: #1c2f6e;
+  --tb-titular: "Oswald", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", var(--font-anthropic-sans), sans-serif;
+  color-scheme: dark;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-block: 0 48px;
+  padding-inline: var(--tb-gutter);
+}
+.tb-marca {
+  max-width: none;
+  margin-inline: calc(-1 * var(--tb-gutter));
+  padding: 28px var(--tb-gutter) 26px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--cds-gap-md) clamp(16px, 3vw, 28px);
+  background: linear-gradient(120deg, var(--tb-marca) 0%, var(--tb-marca-oscuro) 100%);
+  border-bottom: 3px solid #ffffff;
+}
+.tb-logo { width: clamp(64px, 12vw, 96px); height: auto; aspect-ratio: 1; max-width: 100%; border-radius: 50%; object-fit: cover; clip-path: circle(48.5%); background: #ffffff; box-shadow: 0 0 0 3px #ffffff, 0 6px 18px rgba(0, 0, 0, .35); }
+.tb-head-texto { display: grid; gap: 4px; min-width: 0; max-width: 64ch; }
+.tb-eyebrow { color: var(--color-fg-muted); }
+.tb-marca .tb-title { font-family: var(--tb-titular); font-weight: 800; text-transform: uppercase; letter-spacing: .01em; font-size: clamp(2rem, 6vw, 3.4rem); line-height: .95; }
+.tb-marca .tb-lede { color: var(--color-fg); }
+.tb-tab[aria-selected="true"] { border-bottom-color: var(--tb-acento); }
+.tb-filtro[aria-pressed="true"], .tb-btn.is-primary, .tb-btn[aria-pressed="true"] { background: var(--tb-acento); border-color: var(--tb-acento); color: var(--tb-acento-texto); }
+.tb .dash-select { background-color: var(--color-bg); color: var(--color-fg); border-color: var(--color-border-line); }
+.tb :focus-visible { outline-color: var(--tb-acento); }
+.tb-sec-head h2, .tb-liga-titulo h3 { font-family: var(--tb-titular); }
+.tb-sec-head h2 { text-transform: uppercase; letter-spacing: .02em; font-weight: 800; }
+
+@media print {
+  .tb { --color-bg: #ffffff; --color-panel: #ffffff; --color-fg: #111827; --color-fg-muted: #4b5563; --color-border-line: #d1d5db; --tb-acento: #182258; --tb-acento-texto: #ffffff; color-scheme: light; min-height: 0; }
+  .tb-marca { background: none; border-bottom-color: #182258; }
+  .tb-tabs, .tb-filtros, .tb-solo-editor, .tb-quitar, .tb-editor { display: none !important; }
+  .tb-panel + .tb-panel { break-before: page; }
+}
+</style>
+
+<div class="tb sin-permiso">
+  <header class="tb-head tb-marca" id="inicio">
+    <img class="tb-logo" src="img/escudo.png" alt="Escudo del Club Deportivo Toros de Pilauco" width="96" height="96">
+    <div class="tb-head-texto">
+    <p class="tb-eyebrow">Club Deportivo · Rama de Básquetbol</p>
+    <h1 class="tb-title">Toros de Pilauco</h1>
+    <p class="tb-lede" data-read lang="es"><b class="dash-skeleton" data-draw="valor" data-source="plantel_totales" data-field="n" data-where="grupo=todos">—</b> jugadores en el plantel. Pendiente de pago del equipo: <b class="tb-total dash-skeleton" data-draw="valor" data-source="resumen" data-field="pendiente" data-where="area=total" data-format="clp">—</b>.</p>
+    </div>
+  </header>
+
+  <nav class="tb-tabs" role="tablist" aria-label="Secciones">
+    <button type="button" class="tb-tab" role="tab" id="tab-jugadores" aria-controls="jugadores" aria-selected="true">Jugadores</button>
+    <button type="button" class="tb-tab" role="tab" id="tab-pagos" aria-controls="pagos" aria-selected="false" tabindex="-1">Pagos</button>
+    <button type="button" class="tb-tab" role="tab" id="tab-ligas" aria-controls="ligas" aria-selected="false" tabindex="-1">Ligas</button>
+    <button type="button" class="tb-tab" role="tab" id="tab-camisetas" aria-controls="camisetas" aria-selected="false" tabindex="-1">Camisetas</button>
+  </nav>
+
+  <!-- JUGADORES -->
+  <section class="tb-panel" id="jugadores" role="tabpanel" aria-labelledby="tab-jugadores">
+    <div class="tb-sec">
+      <div class="tb-plantel-bar">
+        <div class="tb-filtros" role="group" aria-label="Filtrar jugadores">
+          <button type="button" class="tb-filtro" data-filtro="todos" aria-pressed="true">Todos<span class="tb-cuenta" data-draw="valor" data-source="plantel_totales" data-field="n" data-where="grupo=todos">—</span></button>
+          <span class="tb-filtros-ligas" data-draw="filtros-ligas" data-source="plantel_totales"></span>
+          <button type="button" class="tb-filtro" data-filtro="deuda" aria-pressed="false">Con deuda<span class="tb-cuenta" data-draw="valor" data-source="plantel_totales" data-field="n" data-where="grupo=deuda">—</span></button>
+        </div>
+        <ul class="tb-legend" aria-label="Colores del arbitraje por mes">
+          <li><span class="tb-mes is-ok">mes</span>pagó</li>
+          <li><span class="tb-mes is-bad">mes</span>debe</li>
+          <li><span class="tb-mes is-warn">mes</span>pagó una parte</li>
+          <li><span class="tb-mes is-none">mes</span>sin registro</li>
+          <li><span class="tb-mes is-fuera">mes</span>no estaba en la lista</li>
+        </ul>
+      </div>
+      <div class="tb-plantel-grid">
+        <ul class="tb-plantel" data-draw="plantel" data-source="plantel" aria-label="Jugadores"></ul>
+        <div class="tb-add tb-solo-editor" id="agregar-jugador">
+          <button type="button" class="tb-add-abrir" data-add="abrir" aria-expanded="false" aria-controls="form-nuevo-jugador"><span class="tb-add-mas" aria-hidden="true">+</span><span class="tb-add-label">Agregar jugador</span></button>
+          <form class="tb-form" id="form-nuevo-jugador" hidden novalidate>
+            <h3>Nuevo jugador</h3>
+            <label class="tb-field" for="nuevo-nombre">Nombre<input id="nuevo-nombre" name="nombre" type="text" maxlength="40" autocomplete="off"></label>
+            <label class="tb-field" for="nuevo-numero">Número de camiseta (opcional)<input id="nuevo-numero" name="numero" type="number" min="0" max="99" step="1" inputmode="numeric"></label>
+            <fieldset class="tb-checks"><legend>Ligas</legend><span class="tb-filtros-ligas" data-draw="form-jugador-ligas" data-source="ligas_todas"></span></fieldset>
+            <p class="tb-msg-error" data-msg="nombre" hidden>Escribe el nombre del jugador.</p>
+            <p class="tb-msg-error" data-msg="repetido" hidden>Ya hay un jugador con ese nombre.</p>
+            <p class="tb-msg-error" data-msg="quitado" hidden>Ese jugador está en «Jugadores quitados», más abajo. Restáuralo desde ahí.</p>
+            <p class="tb-msg-error" data-msg="numero" hidden>El número tiene que ser entre 0 y 99.</p>
+            <p class="tb-msg-error" data-msg="liga" hidden>Marca al menos una liga.</p>
+            <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para agregar jugadores hay que tener permiso para editar la página.</p>
+            <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar</button><button type="button" class="tb-btn" data-add="cancelar">Cancelar</button></div>
+          </form>
+        </div>
+      </div>
+      <p class="tb-note">El plantel junta a los jugadores de todas las ligas. El número de camiseta aparece cuando el nombre del jugador figura en la hoja de camisetas o se anotó al agregarlo.</p>
+      <details class="tb-quitados" id="jugadores-quitados" hidden>
+        <summary>Jugadores quitados</summary>
+        <p>No se cuentan en ninguna parte de la página. Al restaurar uno, vuelve con todos sus datos.</p>
+        <ul class="tb-quitados-lista" data-draw="quitados" data-source="jugadores_quitados"></ul>
+        <p class="tb-msg-error" data-msg-restaurar hidden>No se pudo restaurar. Para hacerlo hay que tener permiso para editar la página.</p>
+      </details>
+    </div>
+    <template id="tpl-jugador">
+      <li class="tb-player">
+        <button type="button" class="tb-quitar" data-accion="quitar" aria-label="Quitar jugador"><svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+        <div class="tb-player-top">
+          <span class="tb-player-num" data-slot="numero" aria-label="Número de camiseta"></span>
+          <div class="tb-player-id">
+            <h3 class="tb-player-name" data-slot="jugador"></h3>
+            <p class="tb-player-ligas" data-slot="ligas"></p>
+          </div>
+        </div>
+        <div class="tb-player-estado">
+          <span class="tb-chip is-bad" data-slot="con-deuda">Debe <span data-slot="debe"></span></span>
+          <span class="tb-chip is-ok" data-slot="al-dia">Al día</span>
+        </div>
+        <div class="tb-pm" data-slot="fila-meses">
+          <p class="tb-pm-title">Arbitraje</p>
+          <div class="tb-pm-filas" data-slot="ligas-meses"></div>
+        </div>
+        <div class="tb-player-insc" data-slot="inscripciones"></div>
+        <p class="tb-player-alias" data-slot="fila-alias">En la planilla también como <span data-slot="alias"></span></p>
+        <p class="tb-player-pie"><span data-slot="etiqueta-manual">Agregado a mano</span><span data-slot="confirmar" hidden>¿Quitar de la página? Sus pagos dejan de contarse. <button type="button" class="tb-link is-bad" data-accion="si">Sí, quitar</button> · <button type="button" class="tb-link" data-accion="no">No</button></span><span class="tb-msg-error" data-slot="error-quitar" hidden>No se pudo quitar.</span></p>
+      </li>
+    </template>
+  </section>
+
+  <!-- PAGOS -->
+  <section class="tb-panel" id="pagos" role="tabpanel" aria-labelledby="tab-pagos" hidden>
+    <div class="tb-tiles" id="resumen" aria-label="Resumen por liga">
+      <div class="tb-tiles-ligas" data-draw="tiles-ligas" data-source="resumen"></div>
+      <article class="tb-tile" id="ficha-camisetas">
+        <h3 class="tb-tile-label">Camisetas 2026</h3>
+        <p class="tb-tile-num"><span class="dash-skeleton" data-tile-estado data-draw="valor" data-source="resumen" data-field="pendiente" data-where="area=camisetas" data-format="clp">—</span></p>
+        <p class="tb-tile-sub">pendiente</p>
+        <div class="tb-bar" data-draw="barra" data-source="resumen" data-where="area=camisetas"></div>
+        <p class="tb-tile-foot"><b data-draw="valor" data-source="resumen" data-field="pagados" data-where="area=camisetas">—</b> de <b data-draw="valor" data-source="resumen" data-field="items" data-where="area=camisetas">—</b> pagadas · <b data-draw="valor" data-source="resumen" data-field="recaudado" data-where="area=camisetas" data-format="clp">—</b></p>
+      </article>
+    </div>
+    <template id="tpl-tile">
+      <article class="tb-tile">
+        <h3 class="tb-tile-label" data-slot="nombre"></h3>
+        <p class="tb-tile-num"><span data-slot="pendiente"></span></p>
+        <p class="tb-tile-sub">pendiente</p>
+        <div class="tb-bar" data-slot="barra"></div>
+        <p class="tb-tile-foot">Arbitraje recaudado <b data-slot="rec-arbitraje"></b></p>
+        <p class="tb-tile-foot" data-slot="fila-insc">Inscripción: <b data-slot="insc-pagados"></b> de <b data-slot="insc-total"></b> pagaron · <b data-slot="rec-insc"></b></p>
+      </article>
+    </template>
+
+    <div class="tb-sec" id="deudores">
+      <div class="tb-sec-head">
+        <h2>Quién debe</h2>
+        <p class="tb-note">Suma las cuotas de arbitraje marcadas como «Debe», los saldos por pagar y las inscripciones pendientes. Un mes sin registro no se cuenta como deuda. La inscripción de cada liga se ve y se cambia en la pestaña Ligas.</p>
+      </div>
+      <div class="tb-scroll">
+        <table class="tb-table" data-source="deudores" data-row-key="jugador">
+          <thead><tr><th scope="col" data-field="jugador">Jugador</th><th scope="col" class="num" data-field="total">Debe</th><th scope="col" data-field="detalle">Detalle</th></tr></thead>
+          <tbody data-draw="tabla-deudores"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGAS -->
+  <section class="tb-panel" id="ligas" role="tabpanel" aria-labelledby="tab-ligas" hidden>
+    <div class="tb-sec">
+      <div class="tb-sec-head">
+        <div class="tb-sec-top">
+          <h2>Ligas</h2>
+          <div class="tb-sec-top-acciones tb-solo-editor">
+            <button type="button" class="tb-btn" data-liga-nueva>+ Nueva liga</button>
+          </div>
+        </div>
+        <p class="tb-note" data-ayuda-edicion hidden>Toca una casilla para cambiar el pago de ese mes, partido o inscripción. Las casillas con <b>+</b> son meses en que el jugador no estaba en la lista. Los cambios quedan guardados en esta página; tu planilla de Google no cambia.</p>
+        <ul class="tb-legend" aria-label="Leyenda">
+          <li><span class="tb-chip is-ok">Pagó</span> pagado</li>
+          <li><span class="tb-chip is-bad">Debe</span> cuota completa</li>
+          <li><span class="tb-chip is-warn">$ monto</span> pagó una parte, falta ese monto</li>
+          <li><span class="tb-chip is-none">—</span> sin registro</li>
+          <li><span class="tb-ast">*</span> tiene una nota abajo</li>
+          <li><span class="tb-chip is-ok is-editado">Pagó</span> cambiado a mano</li>
+        </ul>
+      </div>
+
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-liga" hidden novalidate>
+        <h3 data-form-liga-titulo="nueva">Nueva liga</h3>
+        <h3 data-form-liga-titulo="editar" hidden>Editar liga</h3>
+        <p class="tb-note" data-form-liga-nota hidden>Esta liga viene de la planilla. Los cambios quedan guardados en la página y la planilla no cambia. Si desmarcas a un jugador, deja de contarse en esta liga, con sus pagos y su inscripción.</p>
+        <div class="tb-form-grid">
+          <label class="tb-field" for="liga-nombre">Nombre de la liga<input id="liga-nombre" name="nombre" type="text" maxlength="60" autocomplete="off"></label>
+          <label class="tb-field" for="liga-corto">Nombre corto para las fichas (opcional)<input id="liga-corto" name="corto" type="text" maxlength="16" autocomplete="off"></label>
+          <fieldset class="tb-checks"><legend>Arbitraje</legend><label for="liga-arb-mes"><input id="liga-arb-mes" type="radio" name="arb_modo" value="mes" checked>Mensual</label><label for="liga-arb-partido"><input id="liga-arb-partido" type="radio" name="arb_modo" value="partido">Por partido</label></fieldset>
+          <label class="tb-field" for="liga-cuota"><span data-arb-label="mes">Cuota mensual de arbitraje por jugador ($, opcional)</span><span data-arb-label="partido" hidden>Arbitraje por partido por jugador ($, opcional)</span><input id="liga-cuota" name="cuota" type="number" min="0" step="100" inputmode="numeric"></label>
+          <fieldset class="tb-checks"><legend>Inscripción</legend><label for="liga-insc-jugador"><input id="liga-insc-jugador" type="radio" name="insc_modo" value="jugador" checked>Por jugador</label><label for="liga-insc-total"><input id="liga-insc-total" type="radio" name="insc_modo" value="total">Total de la liga (se divide entre los jugadores)</label></fieldset>
+          <label class="tb-field" for="liga-insc"><span data-insc-label="jugador">Cuota de inscripción por jugador ($, opcional)</span><span data-insc-label="total" hidden>Total de la inscripción de la liga ($, opcional)</span><input id="liga-insc" name="insc" type="number" min="0" step="100" inputmode="numeric"></label>
+          <label class="tb-field" for="liga-inicio" data-arb="mes">Primer mes de arbitraje<select id="liga-inicio" name="inicio" class="dash-select"><option>Enero</option><option>Febrero</option><option selected>Marzo</option><option>Abril</option><option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select></label>
+          <label class="tb-field" for="liga-fin" data-arb="mes">Último mes de arbitraje<select id="liga-fin" name="fin" class="dash-select"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option selected>Diciembre</option></select></label>
+          <label class="tb-field tb-ancho" for="liga-partidos" data-arb="partido" hidden>Partidos (opcional), uno por línea, por ejemplo «12/03 vs Colo Colo». Puedes agregarlos después; pon los nuevos al final para no mover los pagos ya anotados.<textarea id="liga-partidos" name="partidos" rows="5" maxlength="3000"></textarea></label>
+          <div class="tb-field tb-ancho"><span>Jugadores que participan</span><div class="tb-check-lista" data-draw="form-liga-jugadores" data-source="plantel"></div></div>
+          <label class="tb-field tb-ancho" for="liga-otros">Otros jugadores que no están en la lista (separados por coma)<input id="liga-otros" name="otros" type="text" maxlength="400" autocomplete="off"></label>
+        </div>
+        <p class="tb-msg-error" data-msg="nombre" hidden>Escribe el nombre de la liga.</p>
+        <p class="tb-msg-error" data-msg="repetida" hidden>Ya hay una liga con ese nombre.</p>
+        <p class="tb-msg-error" data-msg="cuota" hidden>La cuota mensual de arbitraje tiene que ser 0 o más.</p>
+        <p class="tb-msg-error" data-msg="insc" hidden>El monto de inscripción tiene que ser 0 o más.</p>        <p class="tb-msg-error" data-msg="quitado" hidden>Uno de los jugadores escritos está en «Jugadores quitados». Restáuralo primero desde la pestaña Jugadores.</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para crear o editar ligas hay que tener permiso para editar la página.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar liga</button><button type="button" class="tb-btn" data-form-liga="restaurar" hidden>Volver a como está en la planilla</button><button type="button" class="tb-btn" data-form-liga="cancelar">Cancelar</button></div>
+      </form>
+
+      <div class="tb-ligas" data-draw="ligas" data-source="ligas_todas"></div>
+
+      <div class="tb-editor" id="editor-pagos" hidden>
+        <p class="tb-editor-titulo" data-draw="editor-celda">—</p>
+        <div class="tb-editor-opciones" role="group" aria-label="Nuevo estado">
+          <button type="button" class="tb-btn" data-estado="Pagado" aria-pressed="false">Pagó</button>
+          <button type="button" class="tb-btn" data-estado="Debe" aria-pressed="false">Debe</button>
+          <button type="button" class="tb-btn" data-estado="Parcial" aria-pressed="false" data-solo-mes>Pagó una parte</button>
+          <button type="button" class="tb-btn" data-estado="Sin registro" aria-pressed="false" data-solo-mes>Sin registro</button>
+        </div>
+        <div class="tb-editor-campos">
+          <label class="tb-field" for="editor-saldo" data-campo="saldo" hidden>Cuánto falta por pagar ($)<input id="editor-saldo" name="saldo" type="number" min="1" step="100" inputmode="numeric"></label>
+          <label class="tb-field" for="editor-metodo" data-campo="metodo" hidden>Método de pago<select id="editor-metodo" name="metodo" class="dash-select"><option value="">Sin indicar</option><option value="Transferencia">Transferencia</option><option value="Efectivo">Efectivo</option></select></label>
+        </div>
+        <p class="tb-msg-error" data-msg="estado" hidden>Elige un estado.</p>
+        <p class="tb-msg-error" data-msg="saldo" hidden>Escribe cuánto falta por pagar.</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para editar hay que tener permiso para editar la página.</p>
+        <div class="tb-acciones">
+          <button type="button" class="tb-btn is-primary" data-editor="guardar">Guardar</button>
+          <button type="button" class="tb-btn" data-editor="restaurar" hidden>Volver al dato de la planilla</button>
+          <button type="button" class="tb-btn" data-editor="cerrar">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <template id="tpl-liga">
+      <details class="tb-card tb-liga">
+        <summary class="tb-liga-sum">
+          <span class="tb-chevron" aria-hidden="true"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
+          <span class="tb-liga-titulo">
+            <h3 data-slot="nombre"></h3>
+            <span class="tb-liga-cuotas"><span><span data-slot="arb-mes">Arbitraje mensual</span><span data-slot="arb-partido" hidden>Arbitraje por partido</span> <b data-slot="cuota"></b></span><span data-slot="fila-insc">Inscripción <b data-slot="cuota-insc"></b></span><span data-slot="nueva">Agregada desde la página</span><span data-slot="ajustada">Cambiada en la página</span></span>
+          </span>
+          <span class="tb-liga-stats">
+            <span><b data-slot="n-jugadores"></b> jugadores</span>
+            <span class="tb-chip is-bad" data-slot="con-deuda">Pendiente <span data-slot="pendiente"></span></span>
+            <span class="tb-chip is-ok" data-slot="al-dia">Al día</span>
+          </span>
+        </summary>
+        <div class="tb-liga-cuerpo">
+        <div class="tb-liga-acciones tb-solo-editor" data-slot="acciones">
+          <button type="button" class="tb-btn" data-liga-accion="pagos" aria-pressed="false"><span data-off>Editar pagos</span><span data-on hidden>Terminar de editar</span></button>
+          <button type="button" class="tb-link" data-liga-accion="editar">Editar liga</button>
+          <button type="button" class="tb-quitar" data-liga-accion="borrar" aria-label="Eliminar liga"><svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+        </div>
+        <p class="tb-liga-confirmar" data-slot="confirmar" hidden>¿Eliminar esta liga con sus pagos e inscripciones anotados? <button type="button" class="tb-link is-bad" data-liga-accion="si">Sí, eliminar</button> · <button type="button" class="tb-link" data-liga-accion="no">No</button> <span class="tb-msg-error" data-slot="error-liga" hidden>No se pudo eliminar.</span></p>
+        <div class="tb-scroll">
+          <table class="tb-matrix">
+            <thead><tr><th scope="col">Jugador</th><th scope="col" class="tb-col-insc" data-slot="th-insc">Insc.</th></tr></thead>
+            <tbody data-slot="cuerpo"></tbody>
+            <tfoot>
+              <tr><th scope="row">Pagaron</th></tr>
+              <tr><th scope="row">Recaudado</th></tr>
+              <tr class="tb-mx-pend"><th scope="row">Pendiente</th></tr>
+            </tfoot>
+          </table>
+        </div>
+        <ul class="tb-notas" data-slot="partidos"></ul>
+        <ul class="tb-notas" data-slot="notas"></ul>
+        </div>
+      </details>
+    </template>
+  </section>
+
+  <!-- CAMISETAS -->
+  <section class="tb-panel" id="camisetas" role="tabpanel" aria-labelledby="tab-camisetas" hidden>
+    <div class="tb-sec" id="camisetas-equipo">
+      <div class="tb-sec-head">
+        <div class="tb-sec-top">
+          <h2>Camisetas del equipo</h2>
+          <div class="tb-sec-top-acciones tb-solo-editor"><button type="button" class="tb-btn" data-camisa-nueva>+ Agregar camiseta</button></div>
+        </div>
+        <p class="tb-note">Camisetas sin nombre estampado, que son del equipo y las puede usar cualquiera. En total hay <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>.</p>
+      </div>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-camiseta" hidden novalidate>
+        <h3>Nueva camiseta</h3>
+        <div class="tb-form-grid">
+          <label class="tb-field" for="camiseta-modelo">Modelo<select id="camiseta-modelo" name="modelo" class="dash-select"><option value="Old">Old</option><option value="Blanca">Blanca</option><option value="Negra">Negra</option></select></label>
+          <label class="tb-field" for="camiseta-numero">Número<input id="camiseta-numero" name="numero" type="number" min="0" max="99" step="1" inputmode="numeric"></label>
+          <label class="tb-field tb-ancho" for="camiseta-nombre">Nombre estampado (déjalo vacío si es una camiseta del equipo)<input id="camiseta-nombre" name="nombre" type="text" maxlength="20" autocomplete="off"></label>
+        </div>
+        <p class="tb-msg-error" data-msg="numero" hidden>Escribe un número entre 0 y 99.</p>
+        <p class="tb-msg-error" data-msg="repetida" hidden>Ya hay una camiseta de ese modelo con ese número.</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para agregar camisetas hay que tener permiso para editar la página.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar camiseta</button><button type="button" class="tb-btn" data-form-camisa="cancelar">Cancelar</button></div>
+      </form>
+      <div class="tb-equipo">
+        <article class="tb-equipo-card" id="equipo-old">
+          <div class="tb-equipo-top"><h3><span class="tb-sw is-old"></span>Old</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Old">—</span> <span class="tb-equipo-sub">con el equipo · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Old">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Old">—</b></span></p></div>
+          <ul class="tb-num-list" data-draw="numeros" data-modelo="Old" data-tipo="equipo" data-source="camisetas_actual"></ul>
+        </article>
+        <article class="tb-equipo-card" id="equipo-blancas">
+          <div class="tb-equipo-top"><h3><span class="tb-sw is-blanca"></span>Blancas</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Blanca">—</span> <span class="tb-equipo-sub">con el equipo · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Blanca">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Blanca">—</b></span></p></div>
+          <ul class="tb-num-list" data-draw="numeros" data-modelo="Blanca" data-tipo="equipo" data-source="camisetas_actual"></ul>
+        </article>
+        <article class="tb-equipo-card" id="equipo-negras">
+          <div class="tb-equipo-top"><h3><span class="tb-sw is-negra"></span>Negras</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Negra">—</span> <span class="tb-equipo-sub">con el equipo · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Negra">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Negra">—</b></span></p></div>
+          <ul class="tb-num-list" data-draw="numeros" data-modelo="Negra" data-tipo="equipo" data-source="camisetas_actual"></ul>
+        </article>
+      </div>
+    </div>
+    <div class="tb-sec" id="camisetas-prestadas">
+      <div class="tb-sec-head">
+        <div class="tb-sec-top">
+          <h2>Camisetas del equipo prestadas</h2>
+          <div class="tb-sec-top-acciones tb-solo-editor"><button type="button" class="tb-btn" data-prestar-nueva>+ Prestar camiseta</button></div>
+        </div>
+        <p class="tb-note">Con el equipo ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor">Toca una camiseta del equipo para prestarla o marcarla como devuelta.</span></p>
+      </div>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-prestamo" hidden novalidate>
+        <h3>Prestar camiseta del equipo</h3>
+        <div class="tb-form-grid">
+          <label class="tb-field" for="prestamo-camiseta">Camiseta<select id="prestamo-camiseta" name="camiseta" class="dash-select" data-draw="select-camisetas-libres" data-source="camisetas_actual"></select></label>
+          <label class="tb-field" for="prestamo-a">Prestada a<input id="prestamo-a" name="a" type="text" maxlength="40" autocomplete="off" list="lista-jugadores"></label>
+          <label class="tb-field" for="prestamo-desde">Desde<input id="prestamo-desde" name="desde" type="date"></label>
+        </div>
+        <datalist id="lista-jugadores" data-draw="lista-jugadores" data-source="plantel"></datalist>
+        <p class="tb-msg-error" data-msg="camiseta" hidden>Elige la camiseta que se presta.</p>
+        <p class="tb-msg-error" data-msg="a" hidden>Escribe a quién se le presta.</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para prestar camisetas hay que tener permiso para editar la página.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar préstamo</button><button type="button" class="tb-btn" data-form-prestamo="cancelar">Cancelar</button></div>
+      </form>
+      <div class="tb-scroll">
+        <table class="tb-table" data-source="prestamos_actual" data-row-key="id">
+          <thead><tr><th scope="col" data-field="camiseta">Camiseta</th><th scope="col" data-field="a">Prestada a</th><th scope="col" data-field="desde">Desde</th><th scope="col" class="tb-solo-editor"><span class="tb-sr">Acción</span></th></tr></thead>
+          <tbody data-draw="tabla-prestamos"></tbody>
+        </table>
+      </div>
+      <p class="tb-msg-error" data-msg-devolver hidden>No se pudo marcar como devuelta. Para hacerlo hay que tener permiso para editar la página.</p>
+      <div class="tb-editor tb-solo-editor" id="devolver-camiseta" hidden>
+        <p class="tb-editor-titulo" data-draw="prestamo-sel">—</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se pudo marcar como devuelta. Para hacerlo hay que tener permiso para editar la página.</p>
+        <div class="tb-acciones"><button type="button" class="tb-btn is-primary" data-devolver="si">Sí, ya la devolvió</button><button type="button" class="tb-btn" data-devolver="no">Cancelar</button></div>
+      </div>
+    </div>
+    <div class="tb-sec" id="numeros">
+      <div class="tb-sec-head">
+        <h2>Camisetas con nombre</h2>
+        <p class="tb-note">Camisetas personales, con el nombre estampado. Sirve para ver qué números ya están tomados.</p>
+      </div>
+      <div class="tb-nums">
+        <div class="tb-num-group" id="numeros-old"><h3><span class="tb-sw is-old"></span>Old <span class="tb-num-cuenta" data-draw="valor" data-source="camisetas_por_modelo" data-field="con_nombre" data-where="modelo=Old">—</span></h3><ul class="tb-num-list" data-draw="numeros" data-modelo="Old" data-tipo="nombre" data-source="camisetas_actual"></ul></div>
+        <div class="tb-num-group" id="numeros-blancas"><h3><span class="tb-sw is-blanca"></span>Blancas <span class="tb-num-cuenta" data-draw="valor" data-source="camisetas_por_modelo" data-field="con_nombre" data-where="modelo=Blanca">—</span></h3><ul class="tb-num-list" data-draw="numeros" data-modelo="Blanca" data-tipo="nombre" data-source="camisetas_actual"></ul></div>
+        <div class="tb-num-group" id="numeros-negras"><h3><span class="tb-sw is-negra"></span>Negras <span class="tb-num-cuenta" data-draw="valor" data-source="camisetas_por_modelo" data-field="con_nombre" data-where="modelo=Negra">—</span></h3><ul class="tb-num-list" data-draw="numeros" data-modelo="Negra" data-tipo="nombre" data-source="camisetas_actual"></ul></div>
+      </div>
+    </div>
+    <details class="tb-quitados" id="camisetas-quitadas" hidden>
+      <summary>Camisetas quitadas</summary>
+      <p>Camisetas de la planilla que se quitaron de la página. No se cuentan; al restaurar una, vuelve a su modelo.</p>
+      <ul class="tb-quitados-lista" data-draw="camisetas-quitadas" data-source="camisetas_quitadas"></ul>
+      <p class="tb-msg-error" data-msg-restaurar-camisa hidden>No se pudo restaurar. Para hacerlo hay que tener permiso para editar la página.</p>
+    </details>
+    <div class="tb-editor tb-solo-editor" id="confirmar-camiseta" hidden>
+      <p class="tb-editor-titulo" data-draw="camiseta-sel">—</p>
+      <p class="tb-msg-error" data-msg="error" hidden>No se pudo quitar. Para hacerlo hay que tener permiso para editar la página.</p>
+      <div class="tb-acciones"><button type="button" class="tb-btn is-primary" data-camisa="si">Sí, quitar</button><button type="button" class="tb-btn" data-camisa="no">No</button></div>
+    </div>
+    <div class="tb-sec" id="pedido-camisetas">
+      <div class="tb-sec-head">
+        <h2>Pedido de camisetas 2026</h2>
+        <p class="tb-note">Número, nombre en la espalda, talla y modelo de cada camiseta pedida este año.</p>
+      </div>
+      <div class="tb-scroll">
+        <table class="tb-table" data-source="camisetas_pedidos" data-row-key="numero">
+          <thead><tr><th scope="col" data-field="numero">Nº</th><th scope="col" data-field="jugador">Para</th><th scope="col" data-field="dorsal">En la espalda</th><th scope="col" data-field="talla">Talla</th><th scope="col" data-field="tipo">Modelo</th><th scope="col" class="num" data-field="valor">Valor</th><th scope="col" data-field="estado">Estado</th></tr></thead>
+          <tbody data-draw="tabla-pedidos"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <details class="tb-details" id="notas-datos">
+    <summary>Cómo se ordenaron los datos de la planilla</summary>
+    <ul>
+      <li>Es una copia de la planilla de Google Sheets del equipo, sin la hoja «calculos generales». Jaime se sacó de todas las hojas.</li>
+      <li>La hoja «arbitraje galva mensual» es la Liga Galvarino de Peñalolén, y «arbitraje peñalolen mensual» con «inscripcion liga peñalolen» son la Liga Peñalolén.</li>
+      <li>Nombres unificados entre hojas: Sexar es Cesar, Bicho es Vicho, Palele es Paulele, Joaquin es Juako y Guillermo es Guille. En Galvarino, Yefferson, Jefferson y Yeferson son el mismo jugador, igual que Pablo y Pablo L. Pablito es otro jugador, y el «Pablo» de la inscripción es Pablito.</li>
+      <li>Julio se agregó a la inscripción de la Liga Peñalolén como pagado a pedido del equipo; en la planilla no aparece.</li>
+      <li>«Debido» se muestra como Debe, y una celda de estado vacía como sin registro. La planilla anota la cuota de arbitraje solo en agosto; los meses siguientes usan esa misma cuota.</li>
+      <li>La suma de la inscripción en la planilla dejaba fuera a Juako C, que sí pagó. Aquí se cuenta.</li>
+      <li>En «Camisetas Old (con nombre)» las columnas de nombre y número estaban invertidas. Aquí se corrigieron.</li>
+      <li>Las cuentas sueltas al costado de las tablas (como 6000*13 o 88000/11) y la nota «FALTAN 6» de la inscripción no se incluyeron.</li>
+      <li>Las ligas nuevas, los jugadores y camisetas agregados o quitados y los pagos cambiados desde la página quedan guardados en la página; la planilla de Google no cambia.</li>
+    </ul>
+  </details>
+</div>
+
+<script>
+window.toros = (() => {
+  const clpFmt = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+  const intFmt = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
+  const clp = (v) => clpFmt.format(Number(v) || 0);
+  const fmt = (kind, v) => (kind === 'clp' ? clp(v) : typeof v === 'number' ? intFmt.format(v) : String(v));
+  const enc = (s) => encodeURIComponent(String(s));
+  const where = (obj) => Object.entries(obj).map(([k, v]) => enc(k) + '=' + enc(v)).join('&');
+  const fila = (node) => {
+    const s = dash.data(node.dataset.source);
+    if (s.status !== 'ok' || !Array.isArray(s.data)) return { s, row: null };
+    if (node.dataset.row != null) return { s, row: s.data[Number(node.dataset.row)] || null };
+    const conds = (node.dataset.where || '').split('&').filter(Boolean).map((p) => p.split('=').map(decodeURIComponent));
+    return { s, row: s.data.find((r) => conds.every(([k, v]) => String(r[k]) === v)) || null };
+  };
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const mensaje = (cols, text) => { const tr = el('tr', 'tb-msg'); const td = el('td', null, text); td.colSpan = cols; tr.append(td); return tr; };
+  const estadoTabla = (s, cols, error) => (s.status === 'loading' ? mensaje(cols, 'Cargando…') : mensaje(cols, error));
+  const esPagado = (e) => String(e || '').trim().toLowerCase() === 'pagado';
+  const chipEstado = (estado) => el('span', 'tb-chip ' + (esPagado(estado) ? 'is-ok' : 'is-bad'), esPagado(estado) ? 'Pagado' : String(estado || 'Pendiente'));
+  const estadoArbitraje = (r) => {
+    const saldo = Number(r.saldo_pendiente) || 0;
+    if (r.estado === 'Debe') return { cls: 'is-bad', txt: 'Debe', campo: 'estado', dicho: 'debe la cuota' };
+    if (r.estado === 'Pagado' && saldo > 0) return { cls: 'is-warn', txt: clp(saldo), campo: 'saldo_pendiente', dicho: 'pagó una parte, falta ' + clp(saldo) };
+    if (r.estado === 'Pagado') return { cls: 'is-ok', txt: 'Pagó', campo: 'estado', dicho: 'pagado' + (r.metodo ? ' por ' + String(r.metodo).toLowerCase() : '') };
+    return { cls: 'is-none', txt: '—', campo: 'estado', dicho: 'sin registro' };
+  };
+  const slug = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const lista = (v) => (Array.isArray(v) ? v : String(v == null ? '' : v).split(',')).map((x) => String(x).trim()).filter(Boolean);
+  const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const rangoMeses = (inicio, fin) => {
+    const a = MESES.indexOf(inicio), b = MESES.indexOf(fin);
+    if (a < 0 || b < 0) return [];
+    const n = ((b - a + 12) % 12) + 1;
+    return Array.from({ length: n }, (_, i) => MESES[(a + i) % 12]);
+  };
+  const abrev = (mes) => { const f = /^Fecha (\d+)$/.exec(String(mes)); return f ? 'F' + f[1] : String(mes).slice(0, 3); };
+  const partidosDe = (l) => String((l && l.partidos) || '').split('\n').map((x) => x.trim()).filter(Boolean);
+  const descPeriodo = (l, mes) => { const f = /^Fecha (\d+)$/.exec(String(mes)); const p = f ? partidosDe(l)[Number(f[1]) - 1] : null; return p ? 'Fecha ' + f[1] + ' (' + p + ')' : String(mes); };
+  const dos = (n) => String(n).padStart(2, '0');
+  const hoy = () => { const d = new Date(); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
+  const fechaLocal = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null; };
+  const fechaCorta = (iso) => { const d = fechaLocal(iso); return d ? d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; };
+  const diasDesde = (iso) => { const d = fechaLocal(iso); if (!d) return null; const h = fechaLocal(hoy()); return Math.round((h - d) / 86400000); };
+  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null };
+})();
+</script>
+
+<script>
+dash.calc('ligas_todas', {
+  inputs: ['ligas', 'ligas_extra', 'ligas_ajustes'],
+  title: 'Ligas',
+  description: 'Las ligas de la planilla (con los cambios hechos con «Editar liga») más las agregadas desde la página, con su cuota mensual de arbitraje, su cuota de inscripción (0 si no tiene), sus meses y los jugadores sumados o sacados a mano.',
+  fn: (base, extra, ajustes) => {
+    const lista = (v) => (Array.isArray(v) ? v : String(v == null ? '' : v).split(',')).map((x) => String(x).trim()).filter(Boolean);
+    const ajusteDe = new Map((ajustes || []).filter((a) => a.key).map((a) => [String(a.key), a]));
+    const filas = base.map((l, i) => {
+      const a = ajusteDe.get(String(l.key));
+      const mesesPlanilla = lista(l.meses);
+      const nombre = a && String(a.nombre || '').trim() ? String(a.nombre).trim() : String(l.nombre);
+      return {
+        key: String(l.key), nombre,
+        corto: a ? String(a.corto || '').trim() || nombre.replace(/^liga\s+(del?\s+)?/i, '') : String(l.corto || l.nombre),
+        cuota_mensual: Number(a ? a.cuota_mensual : l.cuota_mensual) || 0,
+        cuota_inscripcion: Number(a ? a.cuota_inscripcion : l.cuota_inscripcion) || 0,
+        inscripcion_modo: a && a.inscripcion_modo === 'total' ? 'total' : 'jugador',
+        inscripcion_total: a ? Number(a.inscripcion_total) || 0 : 0,
+        arbitraje_modo: a && a.arbitraje_modo === 'partido' ? 'partido' : 'mes',
+        partidos: a && a.arbitraje_modo === 'partido' ? String(a.partidos || '') : '',
+        meses: (a && lista(a.meses).length ? lista(a.meses) : mesesPlanilla).join(','),
+        meses_planilla: mesesPlanilla.join(','),
+        agregados: a ? lista(a.agregados).join(',') : '', fuera: a ? lista(a.fuera).join(',') : '',
+        ajustada: !!a, jugadores: '', base: true, id: null, orden: i,
+      };
+    });
+    const nuevas = (extra || []).filter((l) => l.id && String(l.nombre || '').trim())
+      .slice().sort((a, b) => String(a.creada || '').localeCompare(String(b.creada || '')));
+    nuevas.forEach((l, i) => {
+      const nombre = String(l.nombre).trim();
+      filas.push({
+        key: 'liga-' + l.id, nombre, corto: String(l.corto || '').trim() || nombre.replace(/^liga\s+(del?\s+)?/i, ''),
+        cuota_mensual: Number(l.cuota_mensual) || 0, cuota_inscripcion: Number(l.cuota_inscripcion) || 0,
+        inscripcion_modo: l.inscripcion_modo === 'total' ? 'total' : 'jugador', inscripcion_total: Number(l.inscripcion_total) || 0,
+        arbitraje_modo: l.arbitraje_modo === 'partido' ? 'partido' : 'mes', partidos: l.arbitraje_modo === 'partido' ? String(l.partidos || '') : '',
+        meses: lista(l.meses).join(','), meses_planilla: '', agregados: '', fuera: '', ajustada: false,
+        jugadores: lista(l.jugadores).join(','), base: false, id: l.id, orden: base.length + i,
+      });
+    });
+    for (const f of filas) f.cobra_inscripcion = f.inscripcion_modo === 'total' ? f.inscripcion_total > 0 : f.cuota_inscripcion > 0;
+    return filas;
+  },
+});
+
+dash.calc('arbitraje_actual', {
+  inputs: ['arbitraje', 'arbitraje_cambios', 'jugadores_quitados', 'ligas_todas'],
+  title: 'Arbitraje con los cambios hechos en la página',
+  description: 'El arbitraje de la planilla más los cambios hechos a mano en la página (cada cambio reemplaza el estado de ese jugador en ese mes, o lo agrega). Deja fuera a los jugadores quitados, los meses que la liga no tiene y, en las ligas agregadas, a quien ya no está en la liga.',
+  fn: (planilla, cambiosTodos, quitados, ligas) => {
+    const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+    const lista = (v) => String(v == null ? '' : v).split(',').map((x) => x.trim()).filter(Boolean);
+    const fuera = new Set((quitados || []).map((q) => norm(q.jugador)));
+    const ligaDe = new Map(ligas.map((l) => [l.key, { ...l, mesesL: lista(l.meses), jugadoresL: new Set(lista(l.jugadores).map(norm)), fueraL: new Set(lista(l.fuera).map(norm)) }]));
+    const vale = (r) => {
+      const l = r && ligaDe.get(r.cancha);
+      if (!l || !r.jugador || fuera.has(norm(r.jugador)) || !l.mesesL.includes(r.mes)) return false;
+      return l.base ? !l.fueraL.has(norm(r.jugador)) : l.jugadoresL.has(norm(r.jugador));
+    };
+    const orden = (r) => ligaDe.get(r.cancha).mesesL.indexOf(r.mes);
+    const clave = (r) => r.cancha + '|' + r.mes + '|' + norm(r.jugador);
+    const cambios = (cambiosTodos || []).filter(vale);
+    const porClave = new Map(cambios.map((c) => [clave(c), c]));
+    const usados = new Set();
+    const filas = planilla.filter(vale).map((r) => {
+      const c = porClave.get(clave(r));
+      const base = { ...r, orden_mes: orden(r) };
+      if (!c) return { ...base, editado: false, agregado: false };
+      usados.add(clave(r));
+      return { ...base, estado: c.estado, saldo_pendiente: c.saldo_pendiente ?? null, metodo: c.metodo || null, nota: null, editado: true, agregado: false, estado_planilla: r.estado };
+    });
+    for (const c of cambios) {
+      if (usados.has(clave(c))) continue;
+      filas.push({ cancha: c.cancha, mes: c.mes, orden_mes: orden(c), jugador: String(c.jugador).trim(), estado: c.estado, metodo: c.metodo || null, saldo_pendiente: c.saldo_pendiente ?? null, nota: null, editado: true, agregado: true, estado_planilla: null });
+    }
+    return filas;
+  },
+});
+
+dash.calc('miembros', {
+  inputs: ['arbitraje_actual', 'jugadores_extra', 'ligas_todas', 'jugadores_quitados'],
+  title: 'Quién juega en cada liga',
+  description: 'Jugadores de cada liga. En las ligas de la planilla: los que aparecen en su arbitraje, los agregados a mano con esa liga marcada y los sumados con «Editar liga», menos los sacados con «Editar liga». En las ligas agregadas: los elegidos al crearla o editarla.',
+  fn: (arbitraje, extra, ligas, quitados) => {
+    const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+    const lista = (v) => String(v == null ? '' : v).split(',').map((x) => x.trim()).filter(Boolean);
+    const fuera = new Set((quitados || []).map((q) => norm(q.jugador)));
+    const ligaDe = new Map(ligas.map((l) => [l.key, l]));
+    const fueraDe = new Map(ligas.map((l) => [l.key, new Set(lista(l.fuera).map(norm))]));
+    const vistos = new Set();
+    const filas = [];
+    const sumar = (liga, jugador) => {
+      const j = String(jugador == null ? '' : jugador).trim();
+      if (!j || !ligaDe.has(liga) || fuera.has(norm(j)) || fueraDe.get(liga).has(norm(j))) return;
+      const k = liga + '|' + norm(j);
+      if (vistos.has(k)) return;
+      vistos.add(k);
+      filas.push({ liga, jugador: j });
+    };
+    for (const r of arbitraje) if (ligaDe.get(r.cancha).base) sumar(r.cancha, r.jugador);
+    for (const x of extra || []) for (const k of lista(x.ligas)) if (ligaDe.has(k) && ligaDe.get(k).base) sumar(k, x.jugador);
+    for (const l of ligas) for (const j of lista(l.base ? l.agregados : l.jugadores)) sumar(l.key, j);
+    return filas;
+  },
+});
+
+dash.calc('inscripciones_actual', {
+  inputs: ['inscripcion', 'inscripcion_cambios', 'ligas_todas', 'miembros', 'jugadores_quitados'],
+  title: 'Inscripciones por liga',
+  description: 'Inscripción de cada jugador en las ligas que cobran inscripción. La Liga Peñalolén parte de la hoja «inscripcion liga peñalolen»; un jugador de la liga que no figura ahí, o de una liga agregada, aparece como pendiente. Los cambios hechos a mano en la página reemplazan el estado.',
+  fn: (planilla, cambios, ligas, miembros, quitados) => {
+    const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+    const fuera = new Set((quitados || []).map((q) => norm(q.jugador)));
+    const cobra = new Map(ligas.filter((l) => l.cobra_inscripcion).map((l) => [l.key, l]));
+    const filas = new Map();
+    const poner = (r) => filas.set(r.liga + '|' + norm(r.jugador), r);
+    const pena = cobra.get('Peñalolén');
+    if (pena) {
+      const sacados = new Set(String(pena.fuera || '').split(',').map(norm).filter(Boolean));
+      for (const r of planilla) {
+        const j = String(r.nombre == null ? '' : r.nombre).trim();
+        if (!j || fuera.has(norm(j)) || sacados.has(norm(j))) continue;
+        poner({ liga: 'Peñalolén', jugador: j, monto: 0, estado: norm(r.estado) === 'pagado' ? 'Pagado' : 'Pendiente', editado: false, de_planilla: true, nombre_planilla: r.nombre_planilla || null });
+      }
+    }
+    for (const m of miembros) {
+      const l = cobra.get(m.liga);
+      if (!l || filas.has(m.liga + '|' + norm(m.jugador))) continue;
+      poner({ liga: m.liga, jugador: m.jugador, monto: 0, estado: 'Pendiente', editado: false, de_planilla: false, nombre_planilla: null });
+    }
+    for (const c of cambios || []) {
+      const previa = filas.get(c.liga + '|' + norm(c.jugador));
+      if (!previa) continue;
+      poner({ ...previa, estado: c.estado === 'Pagado' ? 'Pagado' : 'Pendiente', editado: true });
+    }
+    const todas = [...filas.values()];
+    for (const l of cobra.values()) {
+      const deLaLiga = todas.filter((r) => r.liga === l.key);
+      if (l.inscripcion_modo === 'total') {
+        const n = deLaLiga.length;
+        const base = n ? Math.floor(l.inscripcion_total / n) : 0;
+        let resto = n ? l.inscripcion_total - base * n : 0;
+        for (const r of deLaLiga) { r.monto = base + (resto > 0 ? 1 : 0); if (resto > 0) resto -= 1; }
+      } else {
+        for (const r of deLaLiga) r.monto = l.cuota_inscripcion;
+      }
+    }
+    return todas;
+  },
+});
+
+dash.calc('arbitraje_meses', {
+  inputs: ['arbitraje_actual', 'ligas_todas', 'miembros'],
+  title: 'Arbitraje por liga y mes',
+  description: 'Por liga y mes: cuántos pagaron, cuánto se recaudó y cuánto falta, a la cuota mensual de la liga. Un saldo por pagar se resta de lo recaudado y se suma a lo pendiente. En las ligas agregadas, y en los meses que no estaban en la planilla, un jugador sin dato ese mes cuenta como sin registro.',
+  fn: (arbitraje, ligas, miembros) => {
+    const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+    const filas = [];
+    for (const l of ligas) {
+      const meses = String(l.meses || '').split(',').map((x) => x.trim()).filter(Boolean);
+      const rs = arbitraje.filter((r) => r.cancha === l.key);
+      const mesesPlanilla = new Set(String(l.meses_planilla || '').split(',').map((x) => x.trim()).filter(Boolean));
+      const todos = miembros.filter((m) => m.liga === l.key).map((m) => norm(m.jugador));
+      meses.forEach((mes, i) => {
+        const deLaLiga = l.base && mesesPlanilla.has(mes) ? [] : todos;
+        const delMes = rs.filter((r) => r.mes === mes);
+        let pagados = 0, deben = 0, sinRegistro = 0, recaudado = 0, pendiente = 0;
+        for (const r of delMes) {
+          const saldo = Number(r.saldo_pendiente) || 0;
+          if (r.estado === 'Pagado') { pagados += 1; recaudado += l.cuota_mensual - saldo; pendiente += saldo; }
+          else if (r.estado === 'Debe') { deben += 1; pendiente += l.cuota_mensual; }
+          else sinRegistro += 1;
+        }
+        const conDato = new Set(delMes.map((r) => norm(r.jugador)));
+        const faltan = deLaLiga.filter((j) => !conDato.has(j)).length;
+        filas.push({ liga: l.key, mes, orden_mes: i, jugadores: delMes.length + faltan, pagados, deben, sin_registro: sinRegistro + faltan, recaudado, pendiente });
+      });
+    }
+    return filas;
+  },
+});
+
+dash.calc('resumen', {
+  inputs: ['arbitraje_meses', 'inscripciones_actual', 'camisetas_pedidos', 'ligas_todas'],
+  title: 'Resumen por liga',
+  description: 'Recaudado y pendiente de cada liga (arbitraje más inscripción), de las camisetas y del equipo completo.',
+  fn: (meses, inscripciones, camisetas, ligas) => {
+    const pagado = (e) => String(e || '').trim().toLowerCase() === 'pagado';
+    const filas = ligas.map((l) => {
+      const ms = meses.filter((m) => m.liga === l.key);
+      const is = inscripciones.filter((r) => r.liga === l.key);
+      const recArb = d3.sum(ms, (m) => m.recaudado), penArb = d3.sum(ms, (m) => m.pendiente);
+      const recIns = d3.sum(is.filter((r) => pagado(r.estado)), (r) => r.monto);
+      const penIns = d3.sum(is.filter((r) => !pagado(r.estado)), (r) => r.monto);
+      return { area: l.key, nombre: l.nombre, recaudado_arbitraje: recArb, pendiente_arbitraje: penArb, recaudado_inscripcion: recIns, pendiente_inscripcion: penIns, inscritos: is.length, inscritos_pagados: is.filter((r) => pagado(r.estado)).length, recaudado: recArb + recIns, pendiente: penArb + penIns, pagados: null, items: null };
+    });
+    const pag = camisetas.filter((r) => pagado(r.estado));
+    const cam = { area: 'camisetas', nombre: 'Camisetas', recaudado: d3.sum(pag, (r) => Number(r.valor)), pendiente: d3.sum(camisetas.filter((r) => !pagado(r.estado)), (r) => Number(r.valor)), pagados: pag.length, items: camisetas.length };
+    const total = { area: 'total', nombre: 'Total', recaudado: d3.sum(filas, (f) => f.recaudado) + cam.recaudado, pendiente: d3.sum(filas, (f) => f.pendiente) + cam.pendiente, pagados: null, items: null };
+    return [...filas, cam, total];
+  },
+});
+
+dash.calc('deudores', {
+  inputs: ['arbitraje_actual', 'ligas_todas', 'inscripciones_actual', 'camisetas_pedidos'],
+  title: 'Quién debe',
+  description: 'Lo que debe cada jugador: cuotas de arbitraje marcadas «Debe» (a la cuota de su liga), saldos por pagar, inscripciones pendientes y camisetas no pagadas.',
+  fn: (arbitraje, ligas, inscripciones, camisetas) => {
+    const ligaDe = new Map(ligas.map((l) => [l.key, l]));
+    const pagado = (e) => String(e || '').trim().toLowerCase() === 'pagado';
+    const deudas = [];
+    for (const r of arbitraje) {
+      const l = ligaDe.get(r.cancha);
+      if (!l) continue;
+      const saldo = Number(r.saldo_pendiente) || 0;
+      const concepto = 'Arbitraje ' + l.corto;
+      if (r.estado === 'Debe') deudas.push({ jugador: r.jugador, concepto, detalle: r.mes.toLowerCase(), orden: r.orden_mes, monto: l.cuota_mensual });
+      else if (saldo > 0) deudas.push({ jugador: r.jugador, concepto, detalle: 'saldo de ' + r.mes.toLowerCase(), orden: r.orden_mes, monto: saldo });
+    }
+    for (const r of inscripciones) {
+      const l = ligaDe.get(r.liga);
+      if (!pagado(r.estado)) deudas.push({ jugador: r.jugador, concepto: 'Inscripción ' + (l ? l.corto : r.liga), detalle: '', orden: 0, monto: Number(r.monto) || 0 });
+    }
+    for (const r of camisetas) if (!pagado(r.estado)) deudas.push({ jugador: r.jugador, concepto: 'Camiseta', detalle: 'n.º ' + r.numero, orden: 0, monto: Number(r.valor) });
+    const y = (xs) => (xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' y ' + xs[xs.length - 1]);
+    return d3.rollups(deudas.filter((d) => d.monto > 0), (ds) => ({
+      total: d3.sum(ds, (d) => d.monto),
+      detalle: d3.groups(ds, (d) => d.concepto).map(([c, xs]) => {
+        const det = xs.slice().sort((a, b) => a.orden - b.orden).map((d) => d.detalle).filter(Boolean);
+        return det.length ? c + ': ' + y(det) : c;
+      }).join(' · '),
+    }), (d) => d.jugador)
+      .map(([jugador, v]) => ({ jugador, total: v.total, detalle: v.detalle }))
+      .sort((a, b) => b.total - a.total || a.jugador.localeCompare(b.jugador, 'es'));
+  },
+});
+
+dash.calc('plantel', {
+  inputs: ['miembros', 'arbitraje_actual', 'inscripciones_actual', 'camisetas_actual', 'camisetas_pedidos', 'deudores', 'jugadores_extra', 'jugadores_quitados', 'ligas_todas'],
+  title: 'Plantel',
+  description: 'Jugadores de todas las ligas más los agregados a mano, con sus ligas, número de camiseta (cuando su nombre figura en la hoja de camisetas o se anotó al agregarlo) y lo que debe. Deja fuera a los jugadores quitados.',
+  fn: (miembros, arbitraje, inscripciones, numeros, pedidos, deudores, extraTodos, quitados, ligas) => {
+    const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+    const fuera = new Set((quitados || []).map((q) => norm(q.jugador)));
+    const ligaDe = new Map(ligas.map((l) => [l.key, l]));
+    const extra = new Map((extraTodos || []).filter((x) => norm(x.jugador) && !fuera.has(norm(x.jugador))).map((x) => [norm(x.jugador), x]));
+    const debe = new Map(deudores.map((d) => [norm(d.jugador), d.total]));
+    const camisetas = [
+      ...numeros.filter((r) => r.nombre).map((r) => ({ jugador: r.jugador || r.nombre, numero: r.numero })),
+      ...pedidos.map((r) => ({ jugador: r.jugador, numero: r.numero })),
+    ];
+    const numerosDe = d3.rollup(camisetas, (v) => [...new Set(v.map((x) => Number(x.numero)))].sort((a, b) => a - b), (x) => norm(x.jugador));
+    const jugadores = new Map();
+    for (const m of miembros) {
+      const k = norm(m.jugador);
+      if (!jugadores.has(k)) jugadores.set(k, { jugador: m.jugador, ligas: new Set() });
+      jugadores.get(k).ligas.add(m.liga);
+    }
+    for (const [k, x] of extra) if (!jugadores.has(k)) jugadores.set(k, { jugador: String(x.jugador).trim(), ligas: new Set() });
+    const desdePlanilla = new Set([
+      ...arbitraje.filter((r) => !r.agregado).map((r) => norm(r.jugador)),
+      ...inscripciones.filter((r) => r.de_planilla).map((r) => norm(r.jugador)),
+    ]);
+    return [...jugadores.entries()].map(([k, j]) => {
+      const keys = [...j.ligas].filter((x) => ligaDe.has(x)).sort((a, b) => ligaDe.get(a).orden - ligaDe.get(b).orden);
+      const otros = d3.groups(arbitraje.filter((r) => norm(r.jugador) === k && r.nombre_planilla), (r) => r.nombre_planilla)
+        .map(([n, xs]) => n + ' (' + [...new Set(xs.map((x) => ligaDe.get(x.cancha).corto))].join(' y ') + ')');
+      for (const r of inscripciones) if (norm(r.jugador) === k && r.nombre_planilla) otros.push(r.nombre_planilla + ' (inscripción)');
+      const x = extra.get(k);
+      const nums = numerosDe.get(k) || [];
+      const numManual = x && x.numero !== '' && x.numero != null ? Number(x.numero) : NaN;
+      return {
+        jugador: j.jugador,
+        ligas: keys.join(','),
+        ligas_txt: keys.length ? ((n) => (n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1]))(keys.map((x2) => ligaDe.get(x2).corto)) : 'Sin liga',
+        numero: nums.length ? nums.join(' · ') : Number.isFinite(numManual) ? String(numManual) : null,
+        debe: debe.get(k) || 0,
+        tambien_como: otros.length ? otros.join(', ') : null,
+        manual: !!x && !desdePlanilla.has(k),
+        id: x ? x.id : null,
+      };
+    }).sort((a, b) => a.jugador.localeCompare(b.jugador, 'es'));
+  },
+});
+
+dash.calc('camisetas_actual', {
+  inputs: ['camisetas_numeros', 'camisetas_extra', 'camisetas_quitadas'],
+  title: 'Camisetas',
+  description: 'Las camisetas de la hoja «camisetas toros» sin las quitadas desde la página, más las agregadas a mano. Una camiseta sin nombre estampado es del equipo.',
+  fn: (planilla, extra, quitadas) => {
+    const clave = (m, n) => String(m == null ? '' : m).trim().toLowerCase() + '|' + Number(n);
+    const fuera = new Set((quitadas || []).map((q) => clave(q.modelo, q.numero)));
+    const vistas = new Set();
+    const filas = [];
+    for (const x of extra || []) {
+      const modelo = String(x.modelo == null ? '' : x.modelo).trim();
+      const numero = Number(x.numero);
+      if (!modelo || !Number.isInteger(numero) || vistas.has(clave(modelo, numero))) continue;
+      vistas.add(clave(modelo, numero));
+      const nombre = String(x.nombre == null ? '' : x.nombre).trim() || null;
+      filas.push({ modelo, numero, nombre, jugador: nombre, agregada: true, id: x.id });
+    }
+    for (const r of planilla) {
+      const k = clave(r.modelo, r.numero);
+      if (fuera.has(k) || vistas.has(k)) continue;
+      vistas.add(k);
+      filas.push({ modelo: r.modelo, numero: Number(r.numero), nombre: r.nombre || null, jugador: r.jugador || r.nombre || null, agregada: false, id: null });
+    }
+    return filas;
+  },
+});
+
+dash.calc('prestamos_actual', {
+  inputs: ['camisetas_prestamos', 'camisetas_actual'],
+  title: 'Camisetas del equipo prestadas',
+  description: 'Préstamos vigentes de camisetas del equipo (sin nombre estampado): a quién y desde cuándo. No cuenta el préstamo de una camiseta que ya no está o que ahora tiene nombre.',
+  fn: (prestamos, camisetas) => {
+    const clave = (m, n) => String(m == null ? '' : m).trim().toLowerCase() + '|' + Number(n);
+    const delEquipo = new Map(camisetas.filter((c) => !c.nombre).map((c) => [clave(c.modelo, c.numero), c]));
+    const vistos = new Set();
+    const filas = [];
+    for (const p of prestamos || []) {
+      const k = clave(p.modelo, p.numero);
+      const c = delEquipo.get(k);
+      if (!c || vistos.has(k)) continue;
+      vistos.add(k);
+      filas.push({ id: p.id, modelo: c.modelo, numero: c.numero, camiseta: c.modelo + ' n.º ' + c.numero, a: String(p.a == null ? '' : p.a).trim(), desde: p.desde || null });
+    }
+    return filas.sort((a, b) => String(a.desde || '').localeCompare(String(b.desde || '')) || a.camiseta.localeCompare(b.camiseta, 'es'));
+  },
+});
+
+dash.calc('camisetas_por_modelo', {
+  inputs: ['camisetas_actual', 'prestamos_actual'],
+  title: 'Camisetas por modelo',
+  description: 'Cuántas camisetas hay de cada modelo: del equipo (sin nombre estampado), cuántas de esas están prestadas y cuántas quedan con el equipo, y las con nombre.',
+  fn: (camisetas, prestamos) => {
+    const clave = (m, n) => String(m == null ? '' : m).trim().toLowerCase() + '|' + Number(n);
+    const prestadas = new Set(prestamos.map((p) => clave(p.modelo, p.numero)));
+    const fila = (modelo, rs) => {
+      const equipo = rs.filter((r) => !r.nombre);
+      const fuera = equipo.filter((r) => prestadas.has(clave(r.modelo, r.numero))).length;
+      return { modelo, del_equipo: equipo.length, prestadas: fuera, en_equipo: equipo.length - fuera, con_nombre: rs.length - equipo.length, total: rs.length };
+    };
+    const modelos = [...new Set(['Old', 'Blanca', 'Negra', ...camisetas.map((r) => r.modelo)])];
+    return [...modelos.map((m) => fila(m, camisetas.filter((r) => r.modelo === m))), fila('Todas', camisetas)];
+  },
+});
+
+dash.calc('plantel_totales', {
+  inputs: ['plantel', 'ligas_todas'],
+  title: 'Plantel en números',
+  description: 'Cuántos jugadores hay en total, en cada liga y con deuda.',
+  fn: (plantel, ligas) => [
+    { grupo: 'todos', nombre: 'Todos', n: plantel.length },
+    { grupo: 'deuda', nombre: 'Con deuda', n: plantel.filter((p) => p.debe > 0).length },
+    ...ligas.map((l) => ({ grupo: l.key, nombre: l.corto, n: plantel.filter((p) => String(p.ligas).split(',').includes(l.key)).length })),
+  ],
+});
+</script>
+
+<script>
+(() => {
+  const T = window.toros;
+  const RUTA_EXTRA = 'data/plantel/extra';
+  const RUTA_QUITADOS = 'data/plantel/quitados';
+  const RUTA_CAMBIOS = 'data/arbitraje/cambios';
+  const RUTA_INSC = 'data/ligas/inscripciones';
+  const RUTA_LIGAS = 'data/ligas/extra';
+  const RUTA_AJUSTES = 'data/ligas/ajustes';
+  const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+  const datos = (id) => { const s = dash.data(id); return s.status === 'ok' && Array.isArray(s.data) ? s.data : []; };
+  const usar = (nombre) => {
+    try { return window.claude && window.claude.use ? Promise.resolve(window.claude.use(nombre)).catch(() => null) : Promise.resolve(null); }
+    catch { return Promise.resolve(null); }
+  };
+  let dbPromesa = null;
+  const baseDatos = async () => {
+    const db = await (dbPromesa || (dbPromesa = usar('db')));
+    if (!db) throw new Error('sin base de datos');
+    return db;
+  };
+  const avisar = (raiz, clave) => { for (const m of raiz.querySelectorAll('[data-msg]')) m.hidden = m.dataset.msg !== clave; };
+
+  usar('user').then(async (user) => {
+    let puede = null;
+    try { puede = user ? await user.canEdit() : null; } catch { puede = null; }
+    if (puede === false) for (const raiz of document.querySelectorAll('.tb')) raiz.classList.add('sin-permiso');
+  });
+
+  // Pestañas
+  const tabs = [...document.querySelectorAll('.tb-tab[aria-controls]')];
+  const panel = (t) => document.getElementById(t.getAttribute('aria-controls'));
+  const abrirTab = (id, link) => {
+    if (!tabs.some((t) => t.getAttribute('aria-controls') === id)) return;
+    for (const t of tabs) {
+      const on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      const p = panel(t);
+      if (p) p.hidden = !on;
+    }
+    if (link) dash.setLink(id);
+  };
+  for (const t of tabs) {
+    t.addEventListener('click', () => abrirTab(t.getAttribute('aria-controls'), true));
+    t.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const i = tabs.indexOf(t);
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      abrirTab(next.getAttribute('aria-controls'), true);
+      next.focus();
+    });
+  }
+  const h = decodeURIComponent((location.hash || '').slice(1));
+  if (h) {
+    const destino = document.getElementById(h === 'arbitraje' ? 'ligas' : h);
+    const p = destino && destino.closest('.tb-panel');
+    if (p) abrirTab(p.id, false);
+  }
+  let antes = null;
+  window.addEventListener('beforeprint', () => {
+    if (antes) return;
+    antes = tabs.map((t) => { const p = panel(t); return p ? p.hidden : true; });
+    for (const t of tabs) { const p = panel(t); if (p) p.hidden = false; }
+    for (const d of document.querySelectorAll('details.tb-liga')) d.open = true;
+  });
+  window.addEventListener('afterprint', () => {
+    if (!antes) return;
+    tabs.forEach((t, i) => { const p = panel(t); if (p) p.hidden = antes[i]; });
+    antes = null;
+    for (const d of document.querySelectorAll('details.tb-liga')) d.open = T.ligasAbiertas.has(d.dataset.liga);
+  });
+
+  // Filtros del plantel
+  for (const grupo of document.querySelectorAll('.tb-filtros')) {
+    grupo.addEventListener('click', (e) => {
+      const b = e.target.closest('.tb-filtro');
+      if (!b || !grupo.contains(b)) return;
+      T.filtro = b.dataset.filtro || 'todos';
+      for (const x of grupo.querySelectorAll('.tb-filtro')) x.setAttribute('aria-pressed', x.dataset.filtro === T.filtro ? 'true' : 'false');
+      dash.draw('plantel');
+    });
+  }
+
+  // Agregar jugador
+  for (const card of document.querySelectorAll('.tb-add')) {
+    const abrirBtn = card.querySelector('[data-add="abrir"]');
+    const form = card.querySelector('form');
+    if (!abrirBtn || !form) continue;
+    const mostrar = (abierto) => {
+      form.hidden = !abierto;
+      abrirBtn.hidden = abierto;
+      abrirBtn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+      if (abierto) { const n = form.querySelector('[name="nombre"]'); if (n) n.focus(); }
+      else { form.reset(); T.formJugadorLigas = new Set(); dash.draw('form-jugador-ligas'); avisar(form, null); abrirBtn.focus(); }
+    };
+    abrirBtn.addEventListener('click', () => mostrar(true));
+    const cancelar = form.querySelector('[data-add="cancelar"]');
+    if (cancelar) cancelar.addEventListener('click', () => mostrar(false));
+    form.addEventListener('change', (e) => {
+      const cb = e.target.closest('input[name="liga"]');
+      if (!cb) return;
+      if (cb.checked) T.formJugadorLigas.add(cb.value); else T.formJugadorLigas.delete(cb.value);
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const campo = (n) => form.querySelector('[name="' + n + '"]');
+      const nombre = String((campo('nombre') || {}).value || '').trim().replace(/\s+/g, ' ').replace(/,/g, '');
+      const numeroTxt = String((campo('numero') || {}).value || '').trim();
+      if (!nombre) { avisar(form, 'nombre'); return; }
+      if (datos('plantel').some((p) => norm(p.jugador) === norm(nombre))) { avisar(form, 'repetido'); return; }
+      if (datos('jugadores_quitados').some((q) => norm(q.jugador) === norm(nombre))) { avisar(form, 'quitado'); return; }
+      let numero = null;
+      if (numeroTxt !== '') {
+        const n = Number(numeroTxt);
+        if (!Number.isInteger(n) || n < 0 || n > 99) { avisar(form, 'numero'); return; }
+        numero = n;
+      }
+      const ligas = datos('ligas_todas').filter((l) => T.formJugadorLigas.has(l.key));
+      if (!ligas.length) { avisar(form, 'liga'); return; }
+      const enviar = form.querySelector('[type="submit"]');
+      if (enviar) enviar.disabled = true;
+      avisar(form, null);
+      try {
+        const db = await baseDatos();
+        const baseKeys = ligas.filter((l) => l.base).map((l) => l.key);
+        await db.collection(RUTA_EXTRA).add({ jugador: nombre, numero, ligas: baseKeys.join(','), agregado: new Date().toISOString() });
+        for (const l of ligas.filter((x) => !x.base)) {
+          const doc = datos('ligas_extra').find((x) => x.id === l.id);
+          if (!doc) continue;
+          const { id, ...resto } = doc;
+          const jugadores = T.lista(resto.jugadores);
+          if (!jugadores.some((j) => norm(j) === norm(nombre))) jugadores.push(nombre);
+          await db.doc(RUTA_LIGAS + '/' + id).set({ ...resto, jugadores: jugadores.join(',') });
+        }
+        mostrar(false);
+      } catch {
+        avisar(form, 'error');
+      } finally {
+        if (enviar) enviar.disabled = false;
+      }
+    });
+  }
+
+  // Quitar jugador (todos) y restaurar
+  for (const lista of document.querySelectorAll('.tb-plantel')) {
+    lista.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-accion]');
+      if (!b || !lista.contains(b)) return;
+      const li = b.closest('.tb-player');
+      if (!li) return;
+      const quitar = li.querySelector('[data-accion="quitar"]');
+      const confirmar = li.querySelector('[data-slot="confirmar"]');
+      const error = li.querySelector('[data-slot="error-quitar"]');
+      if (b.dataset.accion === 'quitar') {
+        if (quitar) quitar.hidden = true;
+        if (confirmar) confirmar.hidden = false;
+        if (error) error.hidden = true;
+        return;
+      }
+      if (b.dataset.accion === 'no') {
+        if (confirmar) confirmar.hidden = true;
+        if (quitar) quitar.hidden = false;
+        return;
+      }
+      if (b.dataset.accion === 'si' && li.dataset.jugador) {
+        b.disabled = true;
+        try {
+          const db = await baseDatos();
+          const nombre = li.dataset.jugador;
+          await db.doc(RUTA_QUITADOS + '/' + (T.slug(nombre) || 'jugador-' + Date.now())).set({ jugador: nombre, quitado: new Date().toISOString() });
+        } catch {
+          b.disabled = false;
+          if (confirmar) confirmar.hidden = true;
+          if (quitar) quitar.hidden = false;
+          if (error) error.hidden = false;
+        }
+      }
+    });
+  }
+  for (const caja of document.querySelectorAll('#jugadores-quitados')) {
+    const aviso = caja.querySelector('[data-msg-restaurar]');
+    caja.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-restaurar]');
+      if (!b || !caja.contains(b)) return;
+      b.disabled = true;
+      if (aviso) aviso.hidden = true;
+      try {
+        const db = await baseDatos();
+        await db.doc(RUTA_QUITADOS + '/' + b.dataset.restaurar).delete();
+      } catch {
+        b.disabled = false;
+        if (aviso) aviso.hidden = false;
+      }
+    });
+  }
+  dash.onData(() => {
+    const hay = datos('jugadores_quitados').length > 0;
+    for (const caja of document.querySelectorAll('#jugadores-quitados')) caja.hidden = !hay;
+  });
+
+  // Camisetas: agregar, quitar y restaurar
+  const RUTA_CAM_EXTRA = 'data/camisetas/extra';
+  const RUTA_CAM_QUITADAS = 'data/camisetas/quitadas';
+  const formCam = document.getElementById('form-camiseta');
+  const confirmarCam = document.getElementById('confirmar-camiseta');
+  const abrirFormCam = (modelo, conNombre) => {
+    if (!formCam) return;
+    formCam.reset();
+    avisar(formCam, null);
+    const sel = formCam.querySelector('[name="modelo"]');
+    if (sel && modelo) sel.value = modelo;
+    formCam.hidden = false;
+    formCam.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const foco = formCam.querySelector(conNombre ? '[name="nombre"]' : '[name="numero"]');
+    if (foco) foco.focus({ preventScroll: true });
+  };
+  const cerrarFormCam = () => { if (!formCam) return; formCam.hidden = true; formCam.reset(); avisar(formCam, null); };
+  const cerrarConfirmarCam = () => { T.camisaSel = null; if (confirmarCam) { confirmarCam.hidden = true; avisar(confirmarCam, null); } dash.draw('camiseta-sel'); };
+  for (const b of document.querySelectorAll('[data-camisa-nueva]')) b.addEventListener('click', () => abrirFormCam(null, false));
+  if (formCam) {
+    const cancelar = formCam.querySelector('[data-form-camisa="cancelar"]');
+    if (cancelar) cancelar.addEventListener('click', cerrarFormCam);
+    formCam.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const campo = (n) => formCam.querySelector('[name="' + n + '"]');
+      const modelo = String(campo('modelo').value || '').trim();
+      const numeroTxt = String(campo('numero').value || '').trim();
+      const nombre = String(campo('nombre').value || '').trim().replace(/\s+/g, ' ');
+      const numero = Number(numeroTxt);
+      if (numeroTxt === '' || !Number.isInteger(numero) || numero < 0 || numero > 99) { avisar(formCam, 'numero'); return; }
+      if (datos('camisetas_actual').some((c) => norm(c.modelo) === norm(modelo) && Number(c.numero) === numero)) { avisar(formCam, 'repetida'); return; }
+      const enviar = formCam.querySelector('[type="submit"]');
+      if (enviar) enviar.disabled = true;
+      avisar(formCam, null);
+      try {
+        const db = await baseDatos();
+        await db.collection(RUTA_CAM_EXTRA).add({ modelo, numero, nombre: nombre || null, agregado: new Date().toISOString() });
+        cerrarFormCam();
+      } catch {
+        avisar(formCam, 'error');
+      } finally {
+        if (enviar) enviar.disabled = false;
+      }
+    });
+  }
+  const panelCamisetas = document.getElementById('camisetas');
+  if (panelCamisetas) {
+    panelCamisetas.addEventListener('click', async (e) => {
+      const agregar = e.target.closest('[data-camisa-agregar]');
+      if (agregar) { abrirFormCam(agregar.dataset.modelo, agregar.dataset.tipo === 'nombre'); return; }
+      const quitar = e.target.closest('[data-camisa-quitar]');
+      if (quitar) {
+        T.camisaSel = { modelo: quitar.dataset.modelo, numero: Number(quitar.dataset.numero), nombre: quitar.dataset.nombre || null, id: quitar.dataset.id || null };
+        if (confirmarCam) { avisar(confirmarCam, null); confirmarCam.hidden = false; }
+        dash.draw('camiseta-sel');
+        const si = confirmarCam && confirmarCam.querySelector('[data-camisa="si"]');
+        if (si) si.focus({ preventScroll: true });
+        return;
+      }
+      const restaurar = e.target.closest('[data-camisa-restaurar]');
+      if (restaurar) {
+        const aviso = panelCamisetas.querySelector('[data-msg-restaurar-camisa]');
+        restaurar.disabled = true;
+        if (aviso) aviso.hidden = true;
+        try {
+          const db = await baseDatos();
+          await db.doc(RUTA_CAM_QUITADAS + '/' + restaurar.dataset.camisaRestaurar).delete();
+        } catch {
+          restaurar.disabled = false;
+          if (aviso) aviso.hidden = false;
+        }
+      }
+    });
+  }
+  if (confirmarCam) {
+    confirmarCam.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-camisa]');
+      if (!b) return;
+      if (b.dataset.camisa === 'no') { cerrarConfirmarCam(); return; }
+      const c = T.camisaSel;
+      if (!c) return;
+      b.disabled = true;
+      try {
+        const db = await baseDatos();
+        if (c.id) await db.doc(RUTA_CAM_EXTRA + '/' + c.id).delete();
+        else await db.doc(RUTA_CAM_QUITADAS + '/' + (T.slug(c.modelo) || 'modelo') + '-' + c.numero).set({ modelo: c.modelo, numero: c.numero, nombre: c.nombre, quitada: new Date().toISOString() });
+        cerrarConfirmarCam();
+      } catch {
+        avisar(confirmarCam, 'error');
+      } finally {
+        b.disabled = false;
+      }
+    });
+  }
+  // Préstamos de camisetas del equipo
+  const RUTA_PRESTAMOS = 'data/camisetas/prestamos';
+  const formPrest = document.getElementById('form-prestamo');
+  const panelDevolver = document.getElementById('devolver-camiseta');
+  const puedeEditar = () => !document.querySelector('.tb.sin-permiso');
+  const abrirFormPrestamo = (clave) => {
+    if (!formPrest) return;
+    formPrest.reset();
+    avisar(formPrest, null);
+    T.prestamoSel = clave || '';
+    const desde = formPrest.querySelector('[name="desde"]');
+    if (desde) desde.value = T.hoy();
+    formPrest.hidden = false;
+    dash.draw('select-camisetas-libres');
+    formPrest.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const foco = formPrest.querySelector(clave ? '[name="a"]' : '[name="camiseta"]');
+    if (foco) foco.focus({ preventScroll: true });
+  };
+  const cerrarFormPrestamo = () => { if (!formPrest) return; formPrest.hidden = true; formPrest.reset(); avisar(formPrest, null); T.prestamoSel = ''; };
+  const cerrarDevolver = () => { T.devolverSel = null; if (panelDevolver) { panelDevolver.hidden = true; avisar(panelDevolver, null); } dash.draw('prestamo-sel'); };
+  const abrirDevolver = (id) => {
+    if (!panelDevolver) return;
+    T.devolverSel = id;
+    avisar(panelDevolver, null);
+    panelDevolver.hidden = false;
+    dash.draw('prestamo-sel');
+    const si = panelDevolver.querySelector('[data-devolver="si"]');
+    if (si) si.focus({ preventScroll: true });
+  };
+  const devolver = async (id) => { const db = await baseDatos(); await db.doc(RUTA_PRESTAMOS + '/' + id).delete(); };
+  for (const b of document.querySelectorAll('[data-prestar-nueva]')) b.addEventListener('click', () => abrirFormPrestamo(''));
+  if (formPrest) {
+    const cancelar = formPrest.querySelector('[data-form-prestamo="cancelar"]');
+    if (cancelar) cancelar.addEventListener('click', cerrarFormPrestamo);
+    formPrest.addEventListener('change', (e) => { if (e.target && e.target.name === 'camiseta') T.prestamoSel = e.target.value; });
+    formPrest.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const campo = (n) => formPrest.querySelector('[name="' + n + '"]');
+      const camiseta = String(campo('camiseta').value || '');
+      const a = String(campo('a').value || '').trim().replace(/\s+/g, ' ');
+      const desde = String(campo('desde').value || '') || T.hoy();
+      if (!camiseta) { avisar(formPrest, 'camiseta'); return; }
+      if (!a) { avisar(formPrest, 'a'); return; }
+      const corte = camiseta.lastIndexOf('|');
+      const modelo = camiseta.slice(0, corte);
+      const numero = Number(camiseta.slice(corte + 1));
+      const enviar = formPrest.querySelector('[type="submit"]');
+      if (enviar) enviar.disabled = true;
+      avisar(formPrest, null);
+      try {
+        const db = await baseDatos();
+        await db.doc(RUTA_PRESTAMOS + '/' + (T.slug(modelo) || 'modelo') + '-' + numero).set({ modelo, numero, a, desde, registrado: new Date().toISOString() });
+        cerrarFormPrestamo();
+      } catch {
+        avisar(formPrest, 'error');
+      } finally {
+        if (enviar) enviar.disabled = false;
+      }
+    });
+  }
+  if (panelDevolver) {
+    panelDevolver.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-devolver]');
+      if (!b) return;
+      if (b.dataset.devolver === 'no' || !T.devolverSel) { cerrarDevolver(); return; }
+      b.disabled = true;
+      try { await devolver(T.devolverSel); cerrarDevolver(); }
+      catch { avisar(panelDevolver, 'error'); }
+      finally { b.disabled = false; }
+    });
+  }
+  if (panelCamisetas) {
+    const activarChip = (chip) => {
+      if (!puedeEditar()) return;
+      if (chip.dataset.prestamo) abrirDevolver(chip.dataset.prestamo);
+      else abrirFormPrestamo(chip.dataset.modelo + '|' + chip.dataset.numero);
+    };
+    panelCamisetas.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-camisa-quitar]')) return;
+      const chip = e.target.closest('[data-camisa-chip]');
+      if (chip) { activarChip(chip); return; }
+      const dev = e.target.closest('[data-devolver-id]');
+      if (!dev) return;
+      const aviso = panelCamisetas.querySelector('[data-msg-devolver]');
+      dev.disabled = true;
+      if (aviso) aviso.hidden = true;
+      try {
+        await devolver(dev.dataset.devolverId);
+        if (T.devolverSel === dev.dataset.devolverId) cerrarDevolver();
+      } catch {
+        dev.disabled = false;
+        if (aviso) aviso.hidden = false;
+      }
+    });
+    panelCamisetas.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const chip = e.target && e.target.closest ? e.target.closest('[data-camisa-chip]') : null;
+      if (!chip || e.target !== chip) return;
+      e.preventDefault();
+      activarChip(chip);
+    });
+  }
+
+  dash.onData(() => {
+    const hay = datos('camisetas_quitadas').length > 0;
+    for (const caja of document.querySelectorAll('#camisetas-quitadas')) caja.hidden = !hay;
+  });
+
+  // Formulario de liga (nueva o editar)
+  const formLiga = document.getElementById('form-liga');
+  const abrirFormLiga = (liga) => {
+    if (!formLiga) return;
+    const campo = (n) => formLiga.querySelector('[name="' + n + '"]');
+    formLiga.reset();
+    avisar(formLiga, null);
+    const doc = !liga ? null : liga.base ? datos('ligas_ajustes').find((x) => String(x.key) === liga.key) || null : datos('ligas_extra').find((x) => x.id === liga.id) || null;
+    const actuales = liga ? datos('miembros').filter((m) => m.liga === liga.key).map((m) => m.jugador) : [];
+    T.formLiga = { id: liga ? liga.id : null, key: liga ? liga.key : null, base: !!(liga && liga.base), ajusteId: liga && liga.base && doc ? doc.id : null, creada: doc ? doc.creada : null, jugadores: new Set(actuales) };
+    for (const t of formLiga.querySelectorAll('[data-form-liga-titulo]')) t.hidden = t.dataset.formLigaTitulo !== (liga ? 'editar' : 'nueva');
+    for (const nota of formLiga.querySelectorAll('[data-form-liga-nota]')) nota.hidden = !(liga && liga.base);
+    const restaurar = formLiga.querySelector('[data-form-liga="restaurar"]');
+    if (restaurar) restaurar.hidden = !(liga && liga.base && doc);
+    if (liga) {
+      campo('nombre').value = liga.nombre;
+      campo('corto').value = liga.base ? liga.corto : doc && doc.corto ? doc.corto : '';
+      campo('cuota').value = liga.cuota_mensual ? String(liga.cuota_mensual) : '';
+      const modoInsc = liga.inscripcion_modo === 'total' ? 'total' : 'jugador';
+      for (const r of formLiga.querySelectorAll('[name="insc_modo"]')) r.checked = r.value === modoInsc;
+      campo('insc').value = modoInsc === 'total' ? (liga.inscripcion_total ? String(liga.inscripcion_total) : '') : (liga.cuota_inscripcion ? String(liga.cuota_inscripcion) : '');
+      const modoArb = liga.arbitraje_modo === 'partido' ? 'partido' : 'mes';
+      for (const r of formLiga.querySelectorAll('[name="arb_modo"]')) r.checked = r.value === modoArb;
+      if (modoArb === 'partido') {
+        campo('partidos').value = T.partidosDe(liga).join('\n');
+        if (doc && doc.mes_inicio) campo('inicio').value = doc.mes_inicio;
+        if (doc && doc.mes_fin) campo('fin').value = doc.mes_fin;
+      } else {
+        const meses = T.lista(liga.meses);
+        if (meses.length) { campo('inicio').value = doc && doc.mes_inicio ? doc.mes_inicio : meses[0]; campo('fin').value = doc && doc.mes_fin ? doc.mes_fin : meses[meses.length - 1]; }
+      }
+    }
+    sincronizarModoInsc();
+    formLiga.hidden = false;
+    dash.draw('form-liga-jugadores');
+    formLiga.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const n = campo('nombre');
+    if (n) n.focus({ preventScroll: true });
+  };
+  const cerrarFormLiga = () => { if (!formLiga) return; formLiga.hidden = true; formLiga.reset(); sincronizarModoInsc(); T.formLiga = null; avisar(formLiga, null); };
+  function sincronizarModoInsc() {
+    if (!formLiga) return;
+    const modo = (formLiga.querySelector('[name="insc_modo"]:checked') || {}).value === 'total' ? 'total' : 'jugador';
+    for (const s of formLiga.querySelectorAll('[data-insc-label]')) s.hidden = s.dataset.inscLabel !== modo;
+    const arb = (formLiga.querySelector('[name="arb_modo"]:checked') || {}).value === 'partido' ? 'partido' : 'mes';
+    for (const s of formLiga.querySelectorAll('[data-arb-label]')) s.hidden = s.dataset.arbLabel !== arb;
+    for (const s of formLiga.querySelectorAll('[data-arb]')) s.hidden = s.dataset.arb !== arb;
+  }
+  if (formLiga) formLiga.addEventListener('change', (e) => { if (e.target && (e.target.name === 'insc_modo' || e.target.name === 'arb_modo')) sincronizarModoInsc(); });
+  for (const b of document.querySelectorAll('[data-liga-nueva]')) b.addEventListener('click', () => abrirFormLiga(null));
+  if (formLiga) {
+    const cancelar = formLiga.querySelector('[data-form-liga="cancelar"]');
+    if (cancelar) cancelar.addEventListener('click', cerrarFormLiga);
+    const restaurar = formLiga.querySelector('[data-form-liga="restaurar"]');
+    if (restaurar) restaurar.addEventListener('click', async () => {
+      if (!T.formLiga || !T.formLiga.base || !T.formLiga.ajusteId) return;
+      restaurar.disabled = true;
+      avisar(formLiga, null);
+      try {
+        const db = await baseDatos();
+        await db.doc(RUTA_AJUSTES + '/' + T.formLiga.ajusteId).delete();
+        cerrarFormLiga();
+      } catch {
+        avisar(formLiga, 'error');
+      } finally {
+        restaurar.disabled = false;
+      }
+    });
+    formLiga.addEventListener('change', (e) => {
+      const cb = e.target.closest('input[name="liga-jugador"]');
+      if (!cb || !T.formLiga) return;
+      const actual = [...T.formLiga.jugadores].find((j) => norm(j) === norm(cb.value));
+      if (cb.checked) { if (!actual) T.formLiga.jugadores.add(cb.value); }
+      else if (actual) T.formLiga.jugadores.delete(actual);
+    });
+    formLiga.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!T.formLiga) return;
+      const campo = (n) => formLiga.querySelector('[name="' + n + '"]');
+      const nombre = String(campo('nombre').value || '').trim().replace(/\s+/g, ' ');
+      const corto = String(campo('corto').value || '').trim().replace(/\s+/g, ' ');
+      const cuotaTxt = String(campo('cuota').value || '').trim();
+      const inscTxt = String(campo('insc').value || '').trim();
+      if (!nombre) { avisar(formLiga, 'nombre'); return; }
+      if (datos('ligas_todas').some((l) => norm(l.nombre) === norm(nombre) && l.key !== T.formLiga.key)) { avisar(formLiga, 'repetida'); return; }
+      const cuota = cuotaTxt === '' ? 0 : Number(cuotaTxt);
+      if (!Number.isFinite(cuota) || cuota < 0) { avisar(formLiga, 'cuota'); return; }
+      const insc = inscTxt === '' ? 0 : Number(inscTxt);
+      if (!Number.isFinite(insc) || insc < 0) { avisar(formLiga, 'insc'); return; }
+      const otros = String(campo('otros').value || '').split(',').map((s) => s.trim().replace(/\s+/g, ' ')).filter(Boolean);
+      const quitados = new Set(datos('jugadores_quitados').map((q) => norm(q.jugador)));
+      if (otros.some((o) => quitados.has(norm(o)))) { avisar(formLiga, 'quitado'); return; }
+      const jugadores = [];
+      for (const j of [...T.formLiga.jugadores, ...otros]) if (!jugadores.some((x) => norm(x) === norm(j))) jugadores.push(j);
+      const inicio = campo('inicio').value, fin = campo('fin').value;
+      const modoInsc = (formLiga.querySelector('[name="insc_modo"]:checked') || {}).value === 'total' ? 'total' : 'jugador';
+      const modoArb = (formLiga.querySelector('[name="arb_modo"]:checked') || {}).value === 'partido' ? 'partido' : 'mes';
+      const partidos = String(campo('partidos').value || '').split('\n').map((s) => s.trim().replace(/\s+/g, ' ')).filter(Boolean);
+      const comun = {
+        nombre, corto, cuota_mensual: Math.round(cuota),
+        cuota_inscripcion: modoInsc === 'jugador' ? Math.round(insc) : 0,
+        inscripcion_modo: modoInsc, inscripcion_total: modoInsc === 'total' ? Math.round(insc) : 0,
+        arbitraje_modo: modoArb, partidos: modoArb === 'partido' ? partidos.join('\n') : '',
+        mes_inicio: inicio, mes_fin: fin,
+        meses: modoArb === 'partido' ? partidos.map((_, i) => 'Fecha ' + (i + 1)).join(',') : T.rangoMeses(inicio, fin).join(','),
+      };
+      let doc;
+      if (T.formLiga.base) {
+        const key = T.formLiga.key;
+        const deBase = [];
+        const sumarBase = (j) => { const t = String(j == null ? '' : j).trim(); if (t && !deBase.some((x) => norm(x) === norm(t))) deBase.push(t); };
+        for (const r of datos('arbitraje')) if (r.cancha === key) sumarBase(r.jugador);
+        for (const x of datos('jugadores_extra')) if (T.lista(x.ligas).includes(key)) sumarBase(x.jugador);
+        const elegidos = new Set(jugadores.map(norm));
+        doc = { ...comun, key, agregados: jugadores.filter((j) => !deBase.some((b) => norm(b) === norm(j))).join(','), fuera: deBase.filter((b) => !elegidos.has(norm(b)) && !quitados.has(norm(b))).join(','), actualizada: new Date().toISOString() };
+      } else {
+        doc = { ...comun, jugadores: jugadores.join(','), creada: T.formLiga.creada || new Date().toISOString() };
+      }
+      const enviar = formLiga.querySelector('[type="submit"]');
+      if (enviar) enviar.disabled = true;
+      avisar(formLiga, null);
+      try {
+        const db = await baseDatos();
+        if (T.formLiga.base) await db.doc(RUTA_AJUSTES + '/' + (T.slug(T.formLiga.key) || 'liga')).set(doc);
+        else if (T.formLiga.id) await db.doc(RUTA_LIGAS + '/' + T.formLiga.id).set(doc);
+        else await db.collection(RUTA_LIGAS).add(doc);
+        cerrarFormLiga();
+      } catch {
+        avisar(formLiga, 'error');
+      } finally {
+        if (enviar) enviar.disabled = false;
+      }
+    });
+  }
+
+  // Acciones en las tarjetas de liga y edición de pagos
+  const seccionLigas = document.getElementById('ligas');
+  const editor = document.getElementById('editor-pagos');
+  const redibujar = () => { dash.draw('ligas'); dash.draw('editor-celda'); };
+  const filaActual = (sel) => {
+    if (!sel) return null;
+    if (sel.tipo === 'insc') return datos('inscripciones_actual').find((r) => r.liga === sel.liga && norm(r.jugador) === norm(sel.jugador)) || null;
+    return datos('arbitraje_actual').find((r) => r.cancha === sel.liga && r.mes === sel.mes && norm(r.jugador) === norm(sel.jugador)) || null;
+  };
+  const elegirEstado = (estado) => {
+    if (!editor) return;
+    for (const b of editor.querySelectorAll('[data-estado]')) b.setAttribute('aria-pressed', b.dataset.estado === estado ? 'true' : 'false');
+    const esMes = T.sel && T.sel.tipo !== 'insc';
+    const saldo = editor.querySelector('[data-campo="saldo"]');
+    const metodo = editor.querySelector('[data-campo="metodo"]');
+    if (saldo) saldo.hidden = !(esMes && estado === 'Parcial');
+    if (metodo) metodo.hidden = !(esMes && (estado === 'Pagado' || estado === 'Parcial'));
+  };
+  const cerrarEditor = () => {
+    T.sel = null;
+    if (editor) { editor.hidden = true; avisar(editor, null); }
+    redibujar();
+  };
+  const abrirEditor = (sel) => {
+    if (!editor) return;
+    T.sel = sel;
+    const r = filaActual(sel);
+    const esMes = sel.tipo !== 'insc';
+    for (const b of editor.querySelectorAll('[data-solo-mes]')) b.hidden = !esMes;
+    let estado;
+    if (!esMes) estado = r && r.estado === 'Pagado' ? 'Pagado' : 'Debe';
+    else { const saldo = r ? Number(r.saldo_pendiente) || 0 : 0; estado = !r ? 'Sin registro' : r.estado === 'Pagado' && saldo > 0 ? 'Parcial' : r.estado; }
+    const inSaldo = editor.querySelector('[name="saldo"]');
+    const inMetodo = editor.querySelector('[name="metodo"]');
+    if (inSaldo) inSaldo.value = esMes && r && Number(r.saldo_pendiente) > 0 ? String(r.saldo_pendiente) : '';
+    if (inMetodo) inMetodo.value = esMes && r && (r.metodo === 'Transferencia' || r.metodo === 'Efectivo') ? r.metodo : '';
+    const restaurar = editor.querySelector('[data-editor="restaurar"]');
+    if (restaurar) restaurar.hidden = !(r && r.editado);
+    avisar(editor, null);
+    editor.hidden = false;
+    elegirEstado(estado);
+    redibujar();
+    const pulsado = editor.querySelector('[data-estado][aria-pressed="true"]');
+    if (pulsado) pulsado.focus({ preventScroll: true });
+  };
+  const syncEdicion = () => {
+    const on = T.editandoLigas.size > 0;
+    if (seccionLigas) seccionLigas.classList.toggle('editando', on);
+    for (const t of document.querySelectorAll('[data-editar]')) {
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+      for (const s of t.querySelectorAll('[data-on]')) s.hidden = !on;
+      for (const s of t.querySelectorAll('[data-off]')) s.hidden = on;
+    }
+    for (const a of document.querySelectorAll('[data-ayuda-edicion]')) a.hidden = !on;
+    if (T.sel && !T.editandoLigas.has(T.sel.liga)) cerrarEditor(); else redibujar();
+  };
+  const editarPagosDe = (key, on) => {
+    if (on) { T.editandoLigas.add(key); T.ligasAbiertas.add(key); } else T.editandoLigas.delete(key);
+    syncEdicion();
+  };
+  for (const t of document.querySelectorAll('[data-editar]')) t.addEventListener('click', () => {
+    if (T.editandoLigas.size > 0) T.editandoLigas.clear();
+    else for (const l of datos('ligas_todas')) { T.editandoLigas.add(l.key); T.ligasAbiertas.add(l.key); }
+    syncEdicion();
+  });
+
+  const contLigas = document.querySelector('.tb-ligas');
+  if (contLigas) {
+    contLigas.addEventListener('toggle', (e) => {
+      const d = e.target;
+      if (!d || !d.classList || !d.classList.contains('tb-liga') || antes) return;
+      if (d.open) T.ligasAbiertas.add(d.dataset.liga); else T.ligasAbiertas.delete(d.dataset.liga);
+    }, true);
+    contLigas.addEventListener('click', async (e) => {
+      const celda = e.target.closest('[data-celda]');
+      if (celda && contLigas.contains(celda)) {
+        if (T.editandoLigas.has(celda.dataset.liga)) abrirEditor({ tipo: celda.dataset.tipo, liga: celda.dataset.liga, mes: celda.dataset.mes || null, jugador: celda.dataset.jugador });
+        return;
+      }
+      const b = e.target.closest('[data-liga-accion]');
+      if (!b || !contLigas.contains(b)) return;
+      const card = b.closest('.tb-liga');
+      if (!card) return;
+      const liga = datos('ligas_todas').find((l) => l.key === card.dataset.liga);
+      if (!liga) return;
+      const confirmar = card.querySelector('[data-slot="confirmar"]');
+      const error = card.querySelector('[data-slot="error-liga"]');
+      const accion = b.dataset.ligaAccion;
+      if (accion === 'editar') { abrirFormLiga(liga); return; }
+      if (accion === 'pagos') { editarPagosDe(liga.key, !T.editandoLigas.has(liga.key)); return; }
+      if (liga.base) return;
+      if (accion === 'borrar') { if (confirmar) confirmar.hidden = false; if (error) error.hidden = true; return; }
+      if (accion === 'no') { if (confirmar) confirmar.hidden = true; return; }
+      if (accion === 'si') {
+        b.disabled = true;
+        try {
+          const db = await baseDatos();
+          const cambios = datos('arbitraje_cambios').filter((c) => c.cancha === liga.key && c.id);
+          const insc = datos('inscripcion_cambios').filter((c) => c.liga === liga.key && c.id);
+          await db.doc(RUTA_LIGAS + '/' + liga.id).delete();
+          for (const c of cambios) await db.doc(RUTA_CAMBIOS + '/' + c.id).delete();
+          for (const c of insc) await db.doc(RUTA_INSC + '/' + c.id).delete();
+          if (T.editandoLigas.delete(liga.key)) syncEdicion();
+          if (T.sel && T.sel.liga === liga.key) cerrarEditor();
+        } catch {
+          b.disabled = false;
+          if (error) error.hidden = false;
+        }
+      }
+    });
+  }
+
+  if (editor) {
+    editor.addEventListener('click', async (e) => {
+      const b = e.target.closest('button');
+      if (!b || !T.sel) return;
+      if (b.dataset.estado) { elegirEstado(b.dataset.estado); avisar(editor, null); return; }
+      if (b.dataset.editor === 'cerrar') { cerrarEditor(); return; }
+      if (b.dataset.editor !== 'guardar' && b.dataset.editor !== 'restaurar') return;
+      const sel = T.sel;
+      const restaurando = b.dataset.editor === 'restaurar';
+      const esMes = sel.tipo !== 'insc';
+      let doc = null;
+      if (!restaurando) {
+        const elegido = editor.querySelector('[data-estado][aria-pressed="true"]');
+        const estado = elegido ? elegido.dataset.estado : '';
+        if (!estado) { avisar(editor, 'estado'); return; }
+        if (esMes) {
+          let saldo = null;
+          if (estado === 'Parcial') {
+            const n = Number((editor.querySelector('[name="saldo"]') || {}).value);
+            if (!Number.isFinite(n) || n <= 0) { avisar(editor, 'saldo'); return; }
+            saldo = Math.round(n);
+          }
+          const pago = estado === 'Pagado' || estado === 'Parcial';
+          doc = { cancha: sel.liga, mes: sel.mes, jugador: sel.jugador, estado: pago ? 'Pagado' : estado, saldo_pendiente: saldo, metodo: pago ? (editor.querySelector('[name="metodo"]') || {}).value || null : null, actualizado: new Date().toISOString() };
+        } else {
+          doc = { liga: sel.liga, jugador: sel.jugador, estado: estado === 'Pagado' ? 'Pagado' : 'Pendiente', actualizado: new Date().toISOString() };
+        }
+      }
+      const ruta = esMes
+        ? RUTA_CAMBIOS + '/' + T.slug(sel.liga) + '~' + T.slug(sel.mes) + '~' + T.slug(sel.jugador)
+        : RUTA_INSC + '/' + T.slug(sel.liga) + '~' + T.slug(sel.jugador);
+      const botones = [...editor.querySelectorAll('[data-editor]')];
+      for (const x of botones) x.disabled = true;
+      try {
+        const db = await baseDatos();
+        if (restaurando) await db.doc(ruta).delete(); else await db.doc(ruta).set(doc);
+        cerrarEditor();
+      } catch {
+        avisar(editor, 'error');
+      } finally {
+        for (const x of botones) x.disabled = false;
+      }
+    });
+  }
+})();
+</script>
+
+<script>
+const T = window.toros;
+
+dash.draw('valor', (node) => {
+  const { s, row } = T.fila(node);
+  if (s.status === 'loading') { node.textContent = '—'; return; }
+  node.classList.remove('dash-skeleton');
+  if (s.status !== 'ok') { node.textContent = s.status === 'error' ? 'sin datos' : '—'; return; }
+  const v = row ? row[node.dataset.field] : null;
+  node.textContent = v == null ? '—' : T.fmt(node.dataset.format, v);
+  if (node.hasAttribute('data-tile-estado')) {
+    const tile = node.closest('.tb-tile');
+    if (tile) tile.classList.toggle('is-al-dia', v != null && Number(v) === 0);
+  }
+});
+
+const pintarBarra = (node, rec, pen) => {
+  const total = rec + pen;
+  const fill = T.el('span');
+  fill.style.width = total ? ((100 * rec) / total).toFixed(1) + '%' : '0%';
+  node.replaceChildren(fill);
+  node.setAttribute('role', 'img');
+  node.setAttribute('aria-label', 'Recaudado ' + T.clp(rec) + ' de ' + T.clp(total));
+};
+
+dash.draw('barra', (node) => {
+  const { row } = T.fila(node);
+  if (!row) { node.replaceChildren(); return; }
+  pintarBarra(node, Number(row.recaudado) || 0, Number(row.pendiente) || 0);
+});
+
+dash.draw('filtros-ligas', (span) => {
+  const s = dash.data('plantel_totales');
+  if (s.status !== 'ok') { span.replaceChildren(); return; }
+  if (!s.data.some((r) => r.grupo === T.filtro)) T.filtro = 'todos';
+  span.replaceChildren(...s.data.filter((r) => r.grupo !== 'todos' && r.grupo !== 'deuda').map((r) => {
+    const b = T.el('button', 'tb-filtro');
+    b.type = 'button';
+    b.dataset.filtro = r.grupo;
+    b.setAttribute('aria-pressed', T.filtro === r.grupo ? 'true' : 'false');
+    b.append(document.createTextNode(r.nombre));
+    const c = T.el('span', 'tb-cuenta', String(r.n));
+    c.dataset.source = 'plantel_totales';
+    c.dataset.field = 'n';
+    c.dataset.where = T.where({ grupo: r.grupo });
+    b.append(c);
+    return b;
+  }));
+});
+
+dash.draw('form-jugador-ligas', (span) => {
+  const s = dash.data('ligas_todas');
+  if (s.status !== 'ok') { span.replaceChildren(); return; }
+  span.replaceChildren(...s.data.map((l) => {
+    const id = 'nuevo-liga-' + T.slug(l.key);
+    const lab = T.el('label');
+    lab.htmlFor = id;
+    const cb = T.el('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.name = 'liga';
+    cb.value = l.key;
+    cb.checked = T.formJugadorLigas.has(l.key);
+    lab.append(cb, document.createTextNode(l.corto));
+    return lab;
+  }));
+});
+
+dash.draw('form-liga-jugadores', (box) => {
+  const s = dash.data('plantel');
+  const elegidos = T.formLiga ? [...T.formLiga.jugadores] : [];
+  if (s.status !== 'ok') { box.replaceChildren(T.el('p', 'tb-note', s.status === 'loading' ? 'Cargando jugadores…' : 'No se pudo cargar el plantel.')); return; }
+  const nombres = s.data.map((p) => p.jugador);
+  for (const n of elegidos) if (!nombres.some((x) => x.toLowerCase() === n.toLowerCase())) nombres.push(n);
+  box.replaceChildren(...nombres.map((n) => {
+    const id = 'liga-jugador-' + T.slug(n);
+    const lab = T.el('label');
+    lab.htmlFor = id;
+    const cb = T.el('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.name = 'liga-jugador';
+    cb.value = n;
+    cb.checked = elegidos.some((x) => x.toLowerCase() === n.toLowerCase());
+    lab.append(cb, document.createTextNode(n));
+    return lab;
+  }));
+});
+
+dash.draw('plantel', (ul) => {
+  const s = dash.data('plantel');
+  const a = dash.data('arbitraje_actual');
+  const ins = dash.data('inscripciones_actual');
+  const lg = dash.data('ligas_todas');
+  const tpl = document.getElementById('tpl-jugador');
+  if (s.status !== 'ok' || !tpl) {
+    ul.replaceChildren(T.el('li', 'tb-msg', s.status === 'loading' ? 'Cargando jugadores…' : 'No se pudo cargar el plantel.'));
+    return;
+  }
+  const ligas = lg.status === 'ok' ? lg.data : [];
+  const ligaDe = new Map(ligas.map((l) => [l.key, l]));
+  const porJugador = d3.group(a.status === 'ok' ? a.data : [], (r) => r.jugador.toLowerCase(), (r) => r.cancha);
+  const inscDe = d3.group(ins.status === 'ok' ? ins.data : [], (r) => r.jugador.toLowerCase());
+  const filtro = T.filtro || 'todos';
+  if (!s.data.length) { ul.replaceChildren(T.el('li', 'tb-msg', 'Todavía no hay jugadores. Agrega el primero con «Agregar jugador».')); return; }
+  ul.replaceChildren(...s.data.map((p) => {
+    const frag = tpl.content.cloneNode(true);
+    const li = frag.querySelector('.tb-player');
+    if (!li) return T.el('li');
+    const slot = (n) => li.querySelector('[data-slot="' + n + '"]');
+    const w = T.where({ jugador: p.jugador });
+    const marcar = (node, campo) => { if (node) { node.dataset.source = 'plantel'; node.dataset.field = campo; node.dataset.where = w; } };
+    const keys = String(p.ligas || '').split(',').filter(Boolean);
+    li.id = 'jugador-' + T.slug(p.jugador);
+    li.dataset.jugador = p.jugador;
+    li.classList.toggle('con-deuda', p.debe > 0);
+    li.classList.toggle('es-manual', !!p.manual);
+    li.hidden = !(filtro === 'todos' || (filtro === 'deuda' ? p.debe > 0 : keys.includes(filtro)));
+
+    const num = slot('numero');
+    if (num) {
+      num.textContent = p.numero == null ? '—' : String(p.numero);
+      num.classList.toggle('is-vacio', p.numero == null);
+      num.classList.toggle('is-varios', p.numero != null && String(p.numero).includes('·'));
+      if (p.numero != null) marcar(num, 'numero');
+    }
+    const nombre = slot('jugador');
+    if (nombre) { nombre.textContent = p.jugador; marcar(nombre, 'jugador'); }
+    const ligasTxt = slot('ligas');
+    if (ligasTxt) { ligasTxt.textContent = p.ligas_txt; marcar(ligasTxt, 'ligas_txt'); }
+    const conDeuda = slot('con-deuda'), alDia = slot('al-dia'), monto = slot('debe');
+    if (conDeuda) conDeuda.hidden = !(p.debe > 0);
+    if (alDia) alDia.hidden = p.debe > 0;
+    if (monto) { monto.textContent = T.clp(p.debe); marcar(monto, 'debe'); }
+
+    const filasMeses = [];
+    for (const k of keys) {
+      const l = ligaDe.get(k);
+      if (!l) continue;
+      const meses = T.lista(l.meses);
+      const rs = (porJugador.get(p.jugador.toLowerCase()) || new Map()).get(k) || [];
+      const porMes = new Map(rs.map((r) => [r.mes, r]));
+      const fila = T.el('div', 'tb-pm-row');
+      const cajas = T.el('span', 'tb-pm-meses');
+      for (const m of meses) {
+        const r = porMes.get(m);
+        const caja = T.el('span', 'tb-mes', T.abrev(m));
+        caja.setAttribute('role', 'img');
+        if (!r) {
+          const fueraDeLista = l.base && T.lista(l.meses_planilla).includes(m);
+          caja.classList.add(fueraDeLista ? 'is-fuera' : 'is-none');
+          caja.setAttribute('aria-label', l.corto + ', ' + m.toLowerCase() + ': ' + (fueraDeLista ? 'no estaba en la lista' : 'sin registro'));
+        } else {
+          const e = T.estadoArbitraje(r);
+          caja.classList.add(e.cls);
+          if (r.editado) caja.classList.add('is-editado');
+          caja.dataset.source = 'arbitraje_actual';
+          caja.dataset.field = 'estado';
+          caja.dataset.where = T.where({ cancha: r.cancha, mes: r.mes, jugador: r.jugador });
+          caja.setAttribute('aria-label', l.corto + ', ' + m.toLowerCase() + ': ' + e.dicho);
+        }
+        cajas.append(caja);
+      }
+      fila.append(T.el('span', 'tb-pm-liga', l.corto), cajas);
+      filasMeses.push(fila);
+    }
+    const contMeses = slot('ligas-meses');
+    if (contMeses) contMeses.replaceChildren(...filasMeses);
+    const bloqueMeses = slot('fila-meses');
+    if (bloqueMeses) bloqueMeses.hidden = !filasMeses.length;
+
+    const contIns = slot('inscripciones');
+    if (contIns) {
+      contIns.replaceChildren(...(inscDe.get(p.jugador.toLowerCase()) || []).map((r) => {
+        const l = ligaDe.get(r.liga);
+        const linea = T.el('p', 'tb-player-meta', 'Inscripción ' + (l ? l.corto : r.liga) + ':');
+        const chip = T.el('span', 'tb-chip ' + (r.estado === 'Pagado' ? 'is-ok' : 'is-bad') + (r.editado ? ' is-editado' : ''), r.estado === 'Pagado' ? 'Pagada' : 'Pendiente');
+        chip.dataset.source = 'inscripciones_actual';
+        chip.dataset.field = 'estado';
+        chip.dataset.where = T.where({ liga: r.liga, jugador: r.jugador });
+        linea.append(chip);
+        return linea;
+      }));
+    }
+
+    const filaAlias = slot('fila-alias'), alias = slot('alias');
+    if (filaAlias) filaAlias.hidden = !p.tambien_como;
+    if (alias && p.tambien_como) { alias.textContent = p.tambien_como; marcar(alias, 'tambien_como'); }
+    const etiqueta = slot('etiqueta-manual');
+    if (etiqueta) etiqueta.hidden = !p.manual;
+    const botonQuitar = li.querySelector('[data-accion="quitar"]');
+    if (botonQuitar) botonQuitar.setAttribute('aria-label', 'Quitar a ' + p.jugador);
+    return li;
+  }));
+});
+
+dash.draw('quitados', (ul) => {
+  const s = dash.data('jugadores_quitados');
+  if (s.status !== 'ok' || !Array.isArray(s.data)) { ul.replaceChildren(); return; }
+  const filas = s.data.slice().sort((a, b) => String(a.jugador).localeCompare(String(b.jugador), 'es'));
+  ul.replaceChildren(...filas.map((q) => {
+    const li = T.el('li');
+    const nombre = T.el('span', null, String(q.jugador || ''));
+    nombre.dataset.source = 'jugadores_quitados';
+    nombre.dataset.field = 'jugador';
+    nombre.dataset.where = T.where({ id: q.id });
+    const b = T.el('button', 'tb-link', 'Restaurar');
+    b.type = 'button';
+    b.dataset.restaurar = q.id;
+    b.setAttribute('aria-label', 'Restaurar a ' + String(q.jugador || ''));
+    li.append(nombre, b);
+    return li;
+  }));
+});
+
+dash.draw('tiles-ligas', (cont) => {
+  const s = dash.data('resumen');
+  const lg = dash.data('ligas_todas');
+  const tpl = document.getElementById('tpl-tile');
+  if (s.status !== 'ok' || lg.status !== 'ok' || !tpl) { cont.replaceChildren(); return; }
+  const filaDe = new Map(s.data.map((r) => [r.area, r]));
+  cont.replaceChildren(...lg.data.map((l) => {
+    const r = filaDe.get(l.key);
+    const frag = tpl.content.cloneNode(true);
+    const tile = frag.querySelector('.tb-tile');
+    if (!tile || !r) return T.el('div');
+    const slot = (n) => tile.querySelector('[data-slot="' + n + '"]');
+    const w = T.where({ area: l.key });
+    const poner = (n, campo, texto) => { const x = slot(n); if (!x) return; x.textContent = texto; x.dataset.source = 'resumen'; x.dataset.field = campo; x.dataset.where = w; };
+    tile.id = 'ficha-' + T.slug(l.key);
+    poner('nombre', 'nombre', l.nombre);
+    poner('pendiente', 'pendiente', T.clp(r.pendiente));
+    tile.classList.toggle('is-al-dia', r.pendiente === 0);
+    poner('rec-arbitraje', 'recaudado_arbitraje', T.clp(r.recaudado_arbitraje));
+    const filaInsc = slot('fila-insc');
+    if (filaInsc) filaInsc.hidden = !l.cobra_inscripcion;
+    poner('insc-pagados', 'inscritos_pagados', String(r.inscritos_pagados));
+    poner('insc-total', 'inscritos', String(r.inscritos));
+    poner('rec-insc', 'recaudado_inscripcion', T.clp(r.recaudado_inscripcion));
+    const barra = slot('barra');
+    if (barra) pintarBarra(barra, r.recaudado, r.pendiente);
+    return tile;
+  }));
+});
+
+dash.draw('tabla-deudores', (tbody) => {
+  const s = dash.data('deudores');
+  if (s.status !== 'ok') { tbody.replaceChildren(T.estadoTabla(s, 3, 'No se pudo calcular quién debe.')); return; }
+  if (!s.data.length) { tbody.replaceChildren(T.mensaje(3, 'Nadie debe nada. Todo al día.')); return; }
+  const max = d3.max(s.data, (d) => d.total) || 1;
+  tbody.replaceChildren(...s.data.map((d) => {
+    const tr = T.el('tr');
+    tr.dataset.key = T.enc(d.jugador);
+    const amt = T.el('div', 'tb-amt');
+    const bar = T.el('i');
+    bar.style.width = ((100 * d.total) / max).toFixed(1) + '%';
+    bar.style.background = dash.colors[0];
+    amt.append(bar, T.el('span', null, T.clp(d.total)));
+    const tdAmt = T.el('td', 'num');
+    tdAmt.append(amt);
+    tr.append(T.el('td', null, d.jugador), tdAmt, T.el('td', 'tb-detalle', d.detalle));
+    return tr;
+  }));
+});
+
+dash.draw('ligas', (cont) => {
+  const lg = dash.data('ligas_todas');
+  const tpl = document.getElementById('tpl-liga');
+  if (lg.status !== 'ok' || !tpl) {
+    cont.replaceChildren(T.el('p', 'tb-note', lg.status === 'loading' ? 'Cargando ligas…' : 'No se pudieron cargar las ligas.'));
+    return;
+  }
+  const arb = dash.data('arbitraje_actual'), mie = dash.data('miembros'), ins = dash.data('inscripciones_actual'), mes = dash.data('arbitraje_meses'), res = dash.data('resumen');
+  const filasArb = arb.status === 'ok' ? arb.data : [];
+  const miembros = mie.status === 'ok' ? mie.data : [];
+  const filasIns = ins.status === 'ok' ? ins.data : [];
+  const filasMes = mes.status === 'ok' ? mes.data : [];
+  const filasRes = res.status === 'ok' ? res.data : [];
+  const sel = T.sel;
+  const celda = (tipo, l, jugador, m) => {
+    const editando = T.editandoLigas.has(l.key);
+    const b = { tipo, liga: l.key, jugador, mes: m };
+    return (boton) => {
+      boton.type = 'button';
+      boton.dataset.celda = '';
+      boton.dataset.tipo = tipo;
+      boton.dataset.liga = l.key;
+      boton.dataset.jugador = jugador;
+      if (m) boton.dataset.mes = m;
+      boton.tabIndex = editando ? 0 : -1;
+      if (sel && sel.tipo === b.tipo && sel.liga === b.liga && sel.jugador.toLowerCase() === jugador.toLowerCase() && (tipo === 'insc' || sel.mes === m)) boton.classList.add('is-sel');
+      return boton;
+    };
+  };
+  cont.replaceChildren(...lg.data.map((l) => {
+    const frag = tpl.content.cloneNode(true);
+    const card = frag.querySelector('.tb-liga');
+    if (!card) return T.el('div');
+    const slot = (n) => card.querySelector('[data-slot="' + n + '"]');
+    const wl = T.where({ key: l.key });
+    card.id = 'liga-' + T.slug(l.key);
+    card.dataset.liga = l.key;
+    const nombre = slot('nombre');
+    if (nombre) { nombre.textContent = l.nombre; nombre.dataset.source = 'ligas_todas'; nombre.dataset.field = 'nombre'; nombre.dataset.where = wl; }
+    const cuota = slot('cuota');
+    if (cuota) { cuota.textContent = l.cuota_mensual ? T.clp(l.cuota_mensual) : 'sin definir'; cuota.dataset.source = 'ligas_todas'; cuota.dataset.field = 'cuota_mensual'; cuota.dataset.where = wl; }
+    const conInsc = !!l.cobra_inscripcion;
+    const filaInsc = slot('fila-insc');
+    if (filaInsc) filaInsc.hidden = !conInsc;
+    const cuotaInsc = slot('cuota-insc');
+    if (cuotaInsc && conInsc) {
+      const total = l.inscripcion_modo === 'total';
+      cuotaInsc.textContent = T.clp(total ? l.inscripcion_total : l.cuota_inscripcion);
+      cuotaInsc.dataset.source = 'ligas_todas';
+      cuotaInsc.dataset.field = total ? 'inscripcion_total' : 'cuota_inscripcion';
+      cuotaInsc.dataset.where = wl;
+      const montos = filasIns.filter((r) => r.liga === l.key).map((r) => r.monto);
+      const iguales = montos.length && montos.every((m) => m === montos[0]);
+      const porCabeza = montos.length ? (iguales ? T.clp(montos[0]) : '≈ ' + T.clp(Math.round(l.inscripcion_total / montos.length))) + ' c/u' : '';
+      if (filaInsc) filaInsc.append(T.el('span', 'tb-de', total ? ' en total' + (porCabeza ? ' · ' + porCabeza : '') : ' por jugador'));
+    }
+    const nueva = slot('nueva');
+    if (nueva) nueva.hidden = l.base;
+    const ajustada = slot('ajustada');
+    if (ajustada) ajustada.hidden = !l.ajustada;
+    const borrar = card.querySelector('[data-liga-accion="borrar"]');
+    if (borrar) { borrar.hidden = l.base; borrar.setAttribute('aria-label', 'Eliminar ' + l.nombre); }
+    const editarLiga = card.querySelector('[data-liga-accion="editar"]');
+    if (editarLiga) editarLiga.setAttribute('aria-label', 'Editar ' + l.nombre);
+    const editandoEsta = T.editandoLigas.has(l.key);
+    card.classList.toggle('editando', editandoEsta);
+    const botonPagos = card.querySelector('[data-liga-accion="pagos"]');
+    if (botonPagos) {
+      botonPagos.setAttribute('aria-pressed', editandoEsta ? 'true' : 'false');
+      for (const x of botonPagos.querySelectorAll('[data-on]')) x.hidden = !editandoEsta;
+      for (const x of botonPagos.querySelectorAll('[data-off]')) x.hidden = editandoEsta;
+    }
+    const mesesPlanilla = new Set(T.lista(l.meses_planilla));
+    card.open = T.ligasAbiertas.has(l.key);
+    const nJug = slot('n-jugadores');
+    if (nJug) { nJug.textContent = String(miembros.filter((x) => x.liga === l.key).length); nJug.dataset.source = 'plantel_totales'; nJug.dataset.field = 'n'; nJug.dataset.where = T.where({ grupo: l.key }); }
+    const resLiga = filasRes.find((x) => x.area === l.key);
+    const pendLiga = resLiga ? Number(resLiga.pendiente) || 0 : null;
+    const chipDeuda = slot('con-deuda'), chipAlDia = slot('al-dia'), pend = slot('pendiente');
+    if (chipDeuda) chipDeuda.hidden = !(pendLiga > 0);
+    if (chipAlDia) chipAlDia.hidden = pendLiga !== 0;
+    if (pend && pendLiga != null) { pend.textContent = T.clp(pendLiga); pend.dataset.source = 'resumen'; pend.dataset.field = 'pendiente'; pend.dataset.where = T.where({ area: l.key }); }
+    const tabla = card.querySelector('table');
+    if (tabla) tabla.setAttribute('aria-label', l.nombre + ': pagos por jugador y mes');
+
+    const meses = T.lista(l.meses);
+    const porPartido = l.arbitraje_modo === 'partido';
+    const arbMes = slot('arb-mes'), arbPartido = slot('arb-partido');
+    if (arbMes) arbMes.hidden = porPartido;
+    if (arbPartido) arbPartido.hidden = !porPartido;
+    if (tabla && porPartido) tabla.setAttribute('aria-label', l.nombre + ': pagos por jugador y partido');
+    const thInsc = slot('th-insc');
+    if (thInsc) thInsc.hidden = !conInsc;
+    const trHead = card.querySelector('thead tr');
+    for (const m of meses) { const th = T.el('th', null, T.abrev(m)); th.scope = 'col'; th.dataset.mes = m; th.setAttribute('aria-label', T.descPeriodo(l, m)); trHead.append(th); }
+    const listaPartidos = slot('partidos');
+    if (listaPartidos) {
+      const lista = porPartido ? T.partidosDe(l) : [];
+      if (porPartido && !lista.length) listaPartidos.replaceChildren(T.el('li', null, 'Todavía no hay partidos. Agrégalos con «Editar liga».'));
+      else listaPartidos.replaceChildren(...lista.map((p, i) => T.el('li', null, 'F' + (i + 1) + ' · ' + p)));
+    }
+
+    const jugadores = miembros.filter((x) => x.liga === l.key).map((x) => x.jugador);
+    const idx = new Map(filasArb.filter((r) => r.cancha === l.key).map((r) => [r.jugador.toLowerCase() + '|' + r.mes, r]));
+    const idxIns = new Map(filasIns.filter((r) => r.liga === l.key).map((r) => [r.jugador.toLowerCase(), r]));
+    const cuerpo = slot('cuerpo');
+    const columnas = 1 + (conInsc ? 1 : 0) + meses.length;
+    if (cuerpo) {
+      if (!jugadores.length) cuerpo.replaceChildren(T.mensaje(columnas, l.base ? 'Sin jugadores en esta liga.' : 'Todavía no hay jugadores en esta liga. Agrégalos con «Editar liga».'));
+      else cuerpo.replaceChildren(...jugadores.map((j) => {
+        const tr = T.el('tr');
+        const th = T.el('th', null, j);
+        th.scope = 'row';
+        tr.append(th);
+        if (conInsc) {
+          const td = T.el('td', 'tb-col-insc');
+          const r = idxIns.get(j.toLowerCase());
+          const pag = r && r.estado === 'Pagado';
+          const boton = celda('insc', l, j, null)(T.el('button', 'tb-chip ' + (pag ? 'is-ok' : 'is-bad') + (r && r.editado ? ' is-editado' : ''), pag ? 'Pagó' : 'Debe'));
+          if (r) { boton.dataset.source = 'inscripciones_actual'; boton.dataset.field = 'estado'; boton.dataset.where = T.where({ liga: l.key, jugador: r.jugador }); }
+          boton.setAttribute('aria-label', j + ', inscripción: ' + (pag ? 'pagada' : 'pendiente'));
+          td.append(boton);
+          tr.append(td);
+        }
+        for (const m of meses) {
+          const td = T.el('td');
+          const r = idx.get(j.toLowerCase() + '|' + m);
+          let boton;
+          if (r) {
+            const e = T.estadoArbitraje(r);
+            boton = celda('mes', l, j, m)(T.el('button', 'tb-chip ' + e.cls + (r.editado ? ' is-editado' : ''), e.txt));
+            boton.dataset.source = 'arbitraje_actual';
+            boton.dataset.field = e.campo;
+            boton.dataset.where = T.where({ cancha: r.cancha, mes: r.mes, jugador: r.jugador });
+            boton.setAttribute('aria-label', j + ', ' + m.toLowerCase() + ': ' + e.dicho + (r.editado ? ' (cambiado a mano)' : ''));
+          } else if (l.base && mesesPlanilla.has(m)) {
+            boton = celda('mes', l, j, m)(T.el('button', 'tb-celda-vacia', '+'));
+            boton.setAttribute('aria-label', 'Agregar pago de ' + j + ' en ' + m.toLowerCase());
+          } else {
+            boton = celda('mes', l, j, m)(T.el('button', 'tb-chip is-none', '—'));
+            boton.setAttribute('aria-label', j + ', ' + m.toLowerCase() + ': sin registro');
+          }
+          td.append(boton);
+          if (r && r.nota) td.append(T.el('span', 'tb-ast', '*'));
+          tr.append(td);
+        }
+        return tr;
+      }));
+    }
+
+    const [trPag, trRec, trPen] = card.querySelectorAll('tfoot tr');
+    const celdaPie = (tr, texto, fuente, campo, w) => {
+      if (!tr) return;
+      const td = T.el('td');
+      const span = T.el('span', null, texto);
+      if (fuente) { span.dataset.source = fuente; span.dataset.field = campo; span.dataset.where = w; }
+      td.append(span);
+      tr.append(td);
+      return td;
+    };
+    if (conInsc) {
+      const r = filasRes.find((x) => x.area === l.key);
+      const w = T.where({ area: l.key });
+      const tdP = celdaPie(trPag, r ? String(r.inscritos_pagados) : '—', r ? 'resumen' : null, 'inscritos_pagados', w);
+      if (tdP && r) { tdP.classList.add('tb-col-insc'); tdP.append(T.el('span', 'tb-de', '/' + r.inscritos)); }
+      const tdR = celdaPie(trRec, r ? T.clp(r.recaudado_inscripcion) : '—', r ? 'resumen' : null, 'recaudado_inscripcion', w);
+      if (tdR) tdR.classList.add('tb-col-insc');
+      const tdPe = celdaPie(trPen, r ? T.clp(r.pendiente_inscripcion) : '—', r ? 'resumen' : null, 'pendiente_inscripcion', w);
+      if (tdPe) tdPe.classList.add('tb-col-insc');
+    }
+    for (const m of meses) {
+      const r = filasMes.find((x) => x.liga === l.key && x.mes === m);
+      const w = T.where({ liga: l.key, mes: m });
+      const tdP = celdaPie(trPag, r ? String(r.pagados) : '—', r ? 'arbitraje_meses' : null, 'pagados', w);
+      if (tdP && r) tdP.append(T.el('span', 'tb-de', '/' + r.jugadores));
+      celdaPie(trRec, r ? T.clp(r.recaudado) : '—', r ? 'arbitraje_meses' : null, 'recaudado', w);
+      celdaPie(trPen, r ? T.clp(r.pendiente) : '—', r ? 'arbitraje_meses' : null, 'pendiente', w);
+    }
+
+    const notas = slot('notas');
+    if (notas) notas.replaceChildren(...filasArb.filter((r) => r.cancha === l.key && r.nota).map((r) => {
+      const li = T.el('li', null, '* ' + r.jugador + ', ' + r.mes.toLowerCase() + ': ' + r.nota);
+      li.dataset.source = 'arbitraje_actual';
+      li.dataset.field = 'nota';
+      li.dataset.where = T.where({ cancha: r.cancha, mes: r.mes, jugador: r.jugador });
+      return li;
+    }));
+    return card;
+  }));
+});
+
+dash.draw('editor-celda', (el) => {
+  const sel = T.sel;
+  if (!sel) { el.textContent = '—'; return; }
+  const l = (dash.data('ligas_todas').data || []).find((x) => x.key === sel.liga);
+  const nombreLiga = l ? l.nombre : sel.liga;
+  if (sel.tipo === 'insc') {
+    const ins = dash.data('inscripciones_actual');
+    const r = ins.status === 'ok' ? ins.data.find((x) => x.liga === sel.liga && x.jugador.toLowerCase() === sel.jugador.toLowerCase()) : null;
+    el.textContent = sel.jugador + ', inscripción ' + nombreLiga + '. Ahora: ' + (r && r.estado === 'Pagado' ? 'pagada' : 'pendiente') + (r && r.editado ? ' (cambiado a mano)' : '') + '.';
+    return;
+  }
+  const a = dash.data('arbitraje_actual');
+  const r = a.status === 'ok' ? a.data.find((x) => x.cancha === sel.liga && x.mes === sel.mes && x.jugador.toLowerCase() === sel.jugador.toLowerCase()) : null;
+  const ahora = r ? T.estadoArbitraje(r).dicho : l && l.base && T.lista(l.meses_planilla).includes(sel.mes) ? 'no estaba en la lista' : 'sin registro';
+  el.textContent = sel.jugador + ', ' + nombreLiga + ', ' + (l && l.arbitraje_modo === 'partido' ? T.descPeriodo(l, sel.mes) : String(sel.mes).toLowerCase()) + '. Ahora: ' + ahora + (r && r.editado ? ' (cambiado a mano)' : '') + '.';
+});
+
+dash.draw('tabla-pedidos', (tbody) => {
+  const s = dash.data('camisetas_pedidos');
+  if (s.status !== 'ok') { tbody.replaceChildren(T.estadoTabla(s, 7, 'No se pudo cargar el pedido de camisetas.')); return; }
+  const muestras = (tipo) => {
+    const t = String(tipo || '').toLowerCase();
+    const span = T.el('span', 'tb-modelo');
+    for (const [clave, cls] of [['blanca', 'is-blanca'], ['negra', 'is-negra'], ['old', 'is-old']]) if (t.includes(clave)) span.append(T.el('span', 'tb-sw ' + cls));
+    span.append(document.createTextNode(String(tipo || '')));
+    return span;
+  };
+  tbody.replaceChildren(...s.data.map((r) => {
+    const tr = T.el('tr');
+    tr.dataset.key = T.enc(r.numero);
+    const tdTipo = T.el('td');
+    tdTipo.append(muestras(r.tipo));
+    const tdEstado = T.el('td');
+    tdEstado.append(T.chipEstado(r.estado));
+    const sinNombre = !r.dorsal;
+    tr.append(
+      T.el('td', 'tb-num-cell', String(r.numero)),
+      T.el('td', r.jugador === 'Sin nombre' ? 'tb-muted' : null, r.jugador === 'Sin nombre' ? 'Del equipo' : r.jugador),
+      T.el('td', sinNombre ? 'tb-muted' : 'tb-dorsal', sinNombre ? 'sin nombre' : r.dorsal),
+      T.el('td', null, r.talla),
+      tdTipo,
+      T.el('td', 'num', T.clp(r.valor)),
+      tdEstado,
+    );
+    return tr;
+  }));
+});
+
+const iconoX = (px) => {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 12 12');
+  svg.setAttribute('width', String(px));
+  svg.setAttribute('height', String(px));
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', 'M2 2l8 8M10 2l-8 8');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '2.2');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('fill', 'none');
+  svg.append(path);
+  return svg;
+};
+
+dash.draw('numeros', (ul) => {
+  const s = dash.data('camisetas_actual');
+  if (s.status !== 'ok') { ul.replaceChildren(T.el('li', 'tb-note', s.status === 'loading' ? 'Cargando…' : 'No se pudieron cargar los números.')); return; }
+  const modelo = ul.dataset.modelo;
+  const tipo = ul.dataset.tipo || 'todas';
+  const cls = { Blanca: 'is-blanca', Negra: 'is-negra' }[modelo] || '';
+  const filas = s.data
+    .filter((r) => r.modelo === modelo && (tipo === 'equipo' ? !r.nombre : tipo === 'nombre' ? !!r.nombre : true))
+    .sort((a, b) => a.numero - b.numero);
+  const pr = dash.data('prestamos_actual');
+  const prestadaA = new Map((pr.status === 'ok' && Array.isArray(pr.data) ? pr.data : []).map((p) => [String(p.modelo).toLowerCase() + '|' + p.numero, p]));
+  const items = filas.map((r) => {
+    const delEquipo = !r.nombre;
+    const prestamo = delEquipo ? prestadaA.get(String(r.modelo).toLowerCase() + '|' + r.numero) : null;
+    const li = T.el('li', 'tb-jersey ' + cls + (delEquipo ? ' is-sin' : '') + (tipo === 'equipo' ? ' is-mini' : '') + (r.agregada ? ' is-agregada' : '') + (prestamo ? ' is-prestada' : ''));
+    const num = T.el('b', null, String(r.numero));
+    num.dataset.source = 'camisetas_actual';
+    num.dataset.field = 'numero';
+    num.dataset.where = T.where({ modelo: r.modelo, numero: r.numero });
+    li.append(num);
+    if (tipo !== 'equipo') li.append(T.el('small', null, r.nombre || 'del equipo'));
+    li.setAttribute('aria-label', 'Número ' + r.numero + ', ' + (r.nombre || 'del equipo') + (prestamo ? ', prestada a ' + (prestamo.a || 'alguien') : '') + (r.agregada ? ', agregada a mano' : ''));
+    if (delEquipo) {
+      li.dataset.camisaChip = '';
+      li.dataset.modelo = r.modelo;
+      li.dataset.numero = String(r.numero);
+      if (prestamo) li.dataset.prestamo = prestamo.id;
+      li.tabIndex = 0;
+      li.setAttribute('role', 'button');
+    }
+    const x = T.el('button', 'tb-quitar tb-quitar-mini');
+    x.type = 'button';
+    x.dataset.camisaQuitar = '';
+    x.dataset.modelo = r.modelo;
+    x.dataset.numero = String(r.numero);
+    if (r.nombre) x.dataset.nombre = r.nombre;
+    if (r.agregada && r.id) x.dataset.id = r.id;
+    x.setAttribute('aria-label', 'Quitar camiseta ' + r.modelo + ' número ' + r.numero);
+    x.append(iconoX(8));
+    li.append(x);
+    return li;
+  });
+  if (!items.length) items.push(T.el('li', 'tb-note', tipo === 'equipo' ? 'No hay camisetas del equipo de este modelo.' : 'No hay camisetas con nombre de este modelo.'));
+  const mas = T.el('li', 'tb-jersey-add tb-solo-editor' + (tipo === 'equipo' ? ' is-mini' : ''));
+  const b = T.el('button', null, '+');
+  b.type = 'button';
+  b.dataset.camisaAgregar = '';
+  b.dataset.modelo = modelo;
+  b.dataset.tipo = tipo;
+  b.setAttribute('aria-label', 'Agregar camiseta ' + modelo + (tipo === 'nombre' ? ' con nombre' : ' del equipo'));
+  mas.append(b);
+  ul.replaceChildren(...items, mas);
+});
+
+dash.draw('select-camisetas-libres', (sel) => {
+  const s = dash.data('camisetas_actual');
+  const pr = dash.data('prestamos_actual');
+  if (s.status !== 'ok') { sel.replaceChildren(new Option('Cargando…', '')); return; }
+  const prestadas = new Set((pr.status === 'ok' && Array.isArray(pr.data) ? pr.data : []).map((p) => String(p.modelo).toLowerCase() + '|' + p.numero));
+  const orden = { Old: 0, Blanca: 1, Negra: 2 };
+  const libres = s.data.filter((c) => !c.nombre && !prestadas.has(String(c.modelo).toLowerCase() + '|' + c.numero))
+    .sort((a, b) => (orden[a.modelo] ?? 9) - (orden[b.modelo] ?? 9) || a.numero - b.numero);
+  sel.replaceChildren(new Option(libres.length ? 'Elige una camiseta' : 'No quedan camisetas del equipo libres', ''), ...libres.map((c) => new Option(c.modelo + ' n.º ' + c.numero, c.modelo + '|' + c.numero)));
+  sel.value = libres.some((c) => c.modelo + '|' + c.numero === T.prestamoSel) ? T.prestamoSel : '';
+});
+
+dash.draw('lista-jugadores', (dl) => {
+  const s = dash.data('plantel');
+  dl.replaceChildren(...(s.status === 'ok' ? s.data : []).map((p) => { const o = T.el('option'); o.value = p.jugador; return o; }));
+});
+
+dash.draw('tabla-prestamos', (tbody) => {
+  const s = dash.data('prestamos_actual');
+  if (s.status !== 'ok') { tbody.replaceChildren(T.estadoTabla(s, 4, 'No se pudieron cargar los préstamos.')); return; }
+  if (!s.data.length) { tbody.replaceChildren(T.mensaje(4, 'No hay camisetas prestadas. Todas están con el equipo.')); return; }
+  tbody.replaceChildren(...s.data.map((p) => {
+    const tr = T.el('tr');
+    tr.dataset.key = T.enc(p.id);
+    const tdCam = T.el('td');
+    const modelo = T.el('span', 'tb-modelo');
+    modelo.append(T.el('span', 'tb-sw ' + ({ Blanca: 'is-blanca', Negra: 'is-negra', Old: 'is-old' }[p.modelo] || '')), document.createTextNode(p.camiseta));
+    tdCam.append(modelo);
+    const tdDesde = T.el('td', null, T.fechaCorta(p.desde));
+    const dias = T.diasDesde(p.desde);
+    if (dias != null && dias >= 0) tdDesde.append(T.el('span', 'tb-hace', dias === 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días'));
+    const tdAccion = T.el('td', 'num tb-solo-editor');
+    const b = T.el('button', 'tb-btn', 'Devuelta');
+    b.type = 'button';
+    b.dataset.devolverId = p.id;
+    b.setAttribute('aria-label', 'Marcar ' + p.camiseta + ' como devuelta');
+    tdAccion.append(b);
+    tr.append(tdCam, T.el('td', null, p.a || '—'), tdDesde, tdAccion);
+    return tr;
+  }));
+});
+
+dash.draw('prestamo-sel', (el) => {
+  const id = T.devolverSel;
+  const s = dash.data('prestamos_actual');
+  const p = id && s.status === 'ok' ? s.data.find((x) => x.id === id) : null;
+  if (!p) { el.textContent = '—'; return; }
+  el.textContent = 'La ' + p.camiseta + ' está prestada a ' + (p.a || 'alguien') + ' desde el ' + T.fechaCorta(p.desde) + '. ¿Ya la devolvió?';
+});
+
+dash.draw('camiseta-sel', (el) => {
+  const c = T.camisaSel;
+  if (!c) { el.textContent = '—'; return; }
+  el.textContent = '¿Quitar la camiseta ' + c.modelo + ' n.º ' + c.numero + ' (' + (c.nombre ? 'de ' + c.nombre : 'del equipo') + ')?' + (c.id ? ' Se agregó a mano, así que se borra.' : ' Queda en «Camisetas quitadas» por si quieres restaurarla.');
+});
+
+dash.draw('camisetas-quitadas', (ul) => {
+  const s = dash.data('camisetas_quitadas');
+  if (s.status !== 'ok' || !Array.isArray(s.data)) { ul.replaceChildren(); return; }
+  const filas = s.data.slice().sort((a, b) => String(a.modelo).localeCompare(String(b.modelo)) || Number(a.numero) - Number(b.numero));
+  ul.replaceChildren(...filas.map((q) => {
+    const li = T.el('li');
+    const txt = T.el('span', null, String(q.modelo) + ' n.º ' + q.numero + (q.nombre ? ' (' + q.nombre + ')' : ' (del equipo)'));
+    txt.dataset.source = 'camisetas_quitadas';
+    txt.dataset.field = 'numero';
+    txt.dataset.where = T.where({ id: q.id });
+    const b = T.el('button', 'tb-link', 'Restaurar');
+    b.type = 'button';
+    b.dataset.camisaRestaurar = q.id;
+    b.setAttribute('aria-label', 'Restaurar camiseta ' + q.modelo + ' número ' + q.numero);
+    li.append(txt, b);
+    return li;
+  }));
+});
+</script>
+
+</div>
+</body>
+</html>

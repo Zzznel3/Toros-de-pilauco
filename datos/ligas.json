@@ -1,0 +1,4 @@
+[
+  {"key": "Galva", "nombre": "Liga Galvarino de Peñalolén", "corto": "Galvarino", "cuota_mensual": 6000, "cuota_inscripcion": 0, "meses": "Agosto,Septiembre,Octubre,Noviembre,Diciembre"},
+  {"key": "Peñalolén", "nombre": "Liga Peñalolén", "corto": "Peñalolén", "cuota_mensual": 7400, "cuota_inscripcion": 16000, "meses": "Agosto,Septiembre,Octubre,Noviembre,Diciembre"}
+]

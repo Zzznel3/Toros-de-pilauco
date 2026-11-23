@@ -1,0 +1,15 @@
+[
+  {"n": 1, "nombre": "Guille", "nombre_planilla": "Guillermo", "monto": 16000, "estado": "Pagado"},
+  {"n": 2, "nombre": "Juako", "nombre_planilla": "Joaquin", "monto": 16000, "estado": "Pendiente"},
+  {"n": 3, "nombre": "Erick", "monto": 16000, "estado": "Pagado"},
+  {"n": 4, "nombre": "Cesar", "monto": 16000, "estado": "Pagado"},
+  {"n": 5, "nombre": "Vicho", "monto": 16000, "estado": "Pagado"},
+  {"n": 6, "nombre": "Seba", "monto": 16000, "estado": "Pagado"},
+  {"n": 7, "nombre": "Paulele", "monto": 16000, "estado": "Pagado"},
+  {"n": 8, "nombre": "Miguel", "monto": 16000, "estado": "Pagado"},
+  {"n": 9, "nombre": "Pablito", "nombre_planilla": "Pablo", "monto": 16000, "estado": "Pagado"},
+  {"n": 10, "nombre": "Pablo L", "monto": 16000, "estado": "Pagado"},
+  {"n": 11, "nombre": "Pato", "monto": 16000, "estado": "Pagado"},
+  {"n": 12, "nombre": "Juako C", "monto": 16000, "estado": "Pagado"},
+  {"n": 13, "nombre": "Julio", "monto": 16000, "estado": "Pagado", "nota": "Agregado a pedido del equipo; no está en la planilla"}
+]
