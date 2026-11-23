@@ -2,8 +2,15 @@
 // Vercel agrega solas las variables KV_REST_API_URL y KV_REST_API_TOKEN al conectarla al proyecto.
 const crypto = require('crypto');
 
-const URL_REDIS = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
-const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
+// Si al conectar la base se eligió otro prefijo (por ejemplo STORAGE_), se busca cualquier variable que termine igual.
+const variable = (...nombres) => {
+  for (const n of nombres) if (process.env[n]) return process.env[n];
+  const sufijo = nombres[0].replace(/^KV_/, '_');
+  const otra = Object.keys(process.env).find((k) => k.endsWith(sufijo) && !k.includes('READ_ONLY'));
+  return otra ? process.env[otra] : '';
+};
+const URL_REDIS = variable('KV_REST_API_URL', 'UPSTASH_REDIS_REST_URL');
+const TOKEN = variable('KV_REST_API_TOKEN', 'UPSTASH_REDIS_REST_TOKEN');
 const PREFIJO = 'toros:';
 
 // Lo que se edita desde la página. Cada colección es un hash de Redis: id -> documento en JSON.
