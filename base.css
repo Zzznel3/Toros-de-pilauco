@@ -88,6 +88,38 @@ img { max-width: 100%; }
 }
 .tb-acceso-error { color: #ffb0b0; font-weight: 600; }
 
+/* Permisos por sección: cada control de edición lleva data-perm y solo se ve si el perfil tiene ese permiso */
+.tb:not(.puede-pagos) [data-perm~="pagos"],
+.tb:not(.puede-ligas) [data-perm~="ligas"],
+.tb:not(.puede-jugadores) [data-perm~="jugadores"],
+.tb:not(.puede-camisetas) [data-perm~="camisetas"],
+.tb:not(.es-admin) [data-perm~="admin"],
+.tb:not(.es-principal) [data-perm~="principal"] { display: none !important; }
+.tb:not(.puede-camisetas) .tb-jersey[data-camisa-chip] { cursor: default; }
+.tb:not(.puede-camisetas) .tb-jersey[data-camisa-chip]:hover { outline: none; }
+
+/* Historial de cambios */
+.tb-historial { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; max-width: 900px; }
+.tb-historial li { display: grid; grid-template-columns: 9.5em 10em minmax(0, 1fr); gap: 4px 14px; align-items: baseline; padding: 9px 2px; border-bottom: 1px solid var(--color-border-line, #3a52a3); font-size: var(--cds-font-size-body); }
+.tb-historial-cuando { color: var(--color-fg-muted, #bcc7ea); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.tb-historial-quien { font-weight: 600; overflow-wrap: anywhere; }
+.tb-historial-que { overflow-wrap: anywhere; }
+.tb-historial li.tb-historial-vacio { display: block; color: var(--color-fg-muted, #bcc7ea); border: 0; }
+@media (max-width: 640px) {
+  .tb-historial li { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* Perfiles de administrador */
+.tb-perfiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--cds-gap-md); }
+.tb-perfil { background: var(--color-panel, #243a82); border: 1px solid var(--color-border-line, #3a52a3); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+.tb-perfil-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.tb-perfil-nombre { font-size: 1.05rem; }
+.tb-perfil-confirmar { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted, #bcc7ea); }
+.tb-perfil-msg { margin: 0; font-size: var(--cds-font-size-caption); color: #4ade9a; }
+.tb-perfil-msg.is-error { color: #ffb0b0; }
+.tb-perfil-principal { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted, #bcc7ea); line-height: 1.5; max-width: 72ch; }
+.tb-perfil-principal b { color: var(--color-fg, #ffffff); }
+
 /* Aviso si la base de datos no responde */
 .tb-aviso {
   margin: 0;

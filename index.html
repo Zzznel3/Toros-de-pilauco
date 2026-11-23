@@ -335,6 +335,8 @@
     <button type="button" class="tb-tab" role="tab" id="tab-pagos" aria-controls="pagos" aria-selected="false" tabindex="-1">Pagos</button>
     <button type="button" class="tb-tab" role="tab" id="tab-ligas" aria-controls="ligas" aria-selected="false" tabindex="-1">Ligas</button>
     <button type="button" class="tb-tab" role="tab" id="tab-camisetas" aria-controls="camisetas" aria-selected="false" tabindex="-1">Camisetas</button>
+    <button type="button" class="tb-tab" role="tab" id="tab-historial" aria-controls="historial" aria-selected="false" tabindex="-1" data-perm="admin">Historial</button>
+    <button type="button" class="tb-tab" role="tab" id="tab-administradores" aria-controls="administradores" aria-selected="false" tabindex="-1" data-perm="principal">Administradores</button>
   </nav>
 
   <!-- JUGADORES -->
@@ -356,7 +358,7 @@
       </div>
       <div class="tb-plantel-grid">
         <ul class="tb-plantel" data-draw="plantel" data-source="plantel" aria-label="Jugadores"></ul>
-        <div class="tb-add tb-solo-editor" id="agregar-jugador">
+        <div class="tb-add tb-solo-editor" id="agregar-jugador" data-perm="jugadores">
           <button type="button" class="tb-add-abrir" data-add="abrir" aria-expanded="false" aria-controls="form-nuevo-jugador"><span class="tb-add-mas" aria-hidden="true">+</span><span class="tb-add-label">Agregar jugador</span></button>
           <form class="tb-form" id="form-nuevo-jugador" hidden novalidate>
             <h3>Nuevo jugador</h3>
@@ -383,7 +385,7 @@
     </div>
     <template id="tpl-jugador">
       <li class="tb-player">
-        <button type="button" class="tb-quitar" data-accion="quitar" aria-label="Quitar jugador"><svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+        <button type="button" class="tb-quitar" data-accion="quitar" aria-label="Quitar jugador" data-perm="jugadores"><svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
         <div class="tb-player-top">
           <span class="tb-player-num" data-slot="numero" aria-label="Número de camiseta"></span>
           <div class="tb-player-id">
@@ -450,7 +452,7 @@
         <div class="tb-sec-top">
           <h2>Ligas</h2>
           <div class="tb-sec-top-acciones tb-solo-editor">
-            <button type="button" class="tb-btn" data-liga-nueva>+ Nueva liga</button>
+            <button type="button" class="tb-btn" data-liga-nueva data-perm="ligas">+ Nueva liga</button>
           </div>
         </div>
         <p class="tb-note" data-ayuda-edicion hidden>Toca una casilla para cambiar el pago de ese mes, partido o inscripción. Las casillas con <b>+</b> son meses en que el jugador no estaba en la lista. Los cambios quedan guardados en esta página; tu planilla de Google no cambia.</p>
@@ -464,7 +466,7 @@
         </ul>
       </div>
 
-      <form class="tb-form tb-liga-form tb-solo-editor" id="form-liga" hidden novalidate>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-liga" hidden novalidate data-perm="ligas">
         <h3 data-form-liga-titulo="nueva">Nueva liga</h3>
         <h3 data-form-liga-titulo="editar" hidden>Editar liga</h3>
         <p class="tb-note" data-form-liga-nota hidden>Esta liga viene de la planilla. Los cambios quedan guardados en la página y la planilla no cambia. Si desmarcas a un jugador, deja de contarse en esta liga, con sus pagos y su inscripción.</p>
@@ -529,9 +531,9 @@
         </summary>
         <div class="tb-liga-cuerpo">
         <div class="tb-liga-acciones tb-solo-editor" data-slot="acciones">
-          <button type="button" class="tb-btn" data-liga-accion="pagos" aria-pressed="false"><span data-off>Editar pagos</span><span data-on hidden>Terminar de editar</span></button>
-          <button type="button" class="tb-link" data-liga-accion="editar">Editar liga</button>
-          <button type="button" class="tb-quitar" data-liga-accion="borrar" aria-label="Eliminar liga"><svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+          <button type="button" class="tb-btn" data-liga-accion="pagos" aria-pressed="false" data-perm="pagos"><span data-off>Editar pagos</span><span data-on hidden>Terminar de editar</span></button>
+          <button type="button" class="tb-link" data-liga-accion="editar" data-perm="ligas">Editar liga</button>
+          <button type="button" class="tb-quitar" data-liga-accion="borrar" aria-label="Eliminar liga" data-perm="ligas"><svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
         </div>
         <p class="tb-liga-confirmar" data-slot="confirmar" hidden>¿Eliminar esta liga con sus pagos e inscripciones anotados? <button type="button" class="tb-link is-bad" data-liga-accion="si">Sí, eliminar</button> · <button type="button" class="tb-link" data-liga-accion="no">No</button> <span class="tb-msg-error" data-slot="error-liga" hidden>No se pudo eliminar.</span></p>
         <div class="tb-scroll">
@@ -558,11 +560,11 @@
       <div class="tb-sec-head">
         <div class="tb-sec-top">
           <h2>Camisetas del equipo</h2>
-          <div class="tb-sec-top-acciones tb-solo-editor"><button type="button" class="tb-btn" data-camisa-nueva>+ Agregar camiseta</button></div>
+          <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-camisa-nueva>+ Agregar camiseta</button></div>
         </div>
         <p class="tb-note">Camisetas sin nombre estampado, que son del equipo y las puede usar cualquiera. En total hay <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>.</p>
       </div>
-      <form class="tb-form tb-liga-form tb-solo-editor" id="form-camiseta" hidden novalidate>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-camiseta" hidden novalidate data-perm="camisetas">
         <h3>Nueva camiseta</h3>
         <div class="tb-form-grid">
           <label class="tb-field" for="camiseta-modelo">Modelo<select id="camiseta-modelo" name="modelo" class="dash-select"><option value="Old">Old</option><option value="Blanca">Blanca</option><option value="Negra">Negra</option></select></label>
@@ -593,11 +595,11 @@
       <div class="tb-sec-head">
         <div class="tb-sec-top">
           <h2>Camisetas del equipo prestadas</h2>
-          <div class="tb-sec-top-acciones tb-solo-editor"><button type="button" class="tb-btn" data-prestar-nueva>+ Prestar camiseta</button></div>
+          <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-prestar-nueva>+ Prestar camiseta</button></div>
         </div>
-        <p class="tb-note">Con el equipo ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor">Toca una camiseta del equipo para prestarla o marcarla como devuelta.</span></p>
+        <p class="tb-note">Con el equipo ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla o marcarla como devuelta.</span></p>
       </div>
-      <form class="tb-form tb-liga-form tb-solo-editor" id="form-prestamo" hidden novalidate>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-prestamo" hidden novalidate data-perm="camisetas">
         <h3>Prestar camiseta del equipo</h3>
         <div class="tb-form-grid">
           <label class="tb-field" for="prestamo-camiseta">Camiseta<select id="prestamo-camiseta" name="camiseta" class="dash-select" data-draw="select-camisetas-libres" data-source="camisetas_actual"></select></label>
@@ -612,7 +614,7 @@
       </form>
       <div class="tb-scroll">
         <table class="tb-table" data-source="prestamos_actual" data-row-key="id">
-          <thead><tr><th scope="col" data-field="camiseta">Camiseta</th><th scope="col" data-field="a">Prestada a</th><th scope="col" data-field="desde">Desde</th><th scope="col" class="tb-solo-editor"><span class="tb-sr">Acción</span></th></tr></thead>
+          <thead><tr><th scope="col" data-field="camiseta">Camiseta</th><th scope="col" data-field="a">Prestada a</th><th scope="col" data-field="desde">Desde</th><th scope="col" class="tb-solo-editor" data-perm="camisetas"><span class="tb-sr">Acción</span></th></tr></thead>
           <tbody data-draw="tabla-prestamos"></tbody>
         </table>
       </div>
@@ -659,8 +661,41 @@
     </div>
   </section>
 
-  <details class="tb-details" id="notas-datos">
-    <summary>Cómo se ordenaron los datos de la planilla</summary>
+  <!-- HISTORIAL (solo administradores) -->
+  <section class="tb-panel" id="historial" role="tabpanel" aria-labelledby="tab-historial" hidden>
+    <div class="tb-sec">
+      <div class="tb-sec-head">
+        <h2>Historial de cambios</h2>
+        <p class="tb-note">Los últimos cambios hechos desde la página: cuándo, quién y qué cambió. Solo lo ven los administradores.</p>
+      </div>
+      <ol class="tb-historial" id="historial-lista"></ol>
+    </div>
+  </section>
+
+  <!-- ADMINISTRADORES (solo el administrador principal) -->
+  <section class="tb-panel" id="administradores" role="tabpanel" aria-labelledby="tab-administradores" hidden>
+    <div class="tb-sec">
+      <div class="tb-sec-head">
+        <h2>Administradores</h2>
+        <p class="tb-note">Cada administrador entra con su usuario y su contraseña, y solo puede editar las secciones que marques. Si cambias su contraseña o borras su perfil, pierde el acceso de inmediato.</p>
+        <p class="tb-perfil-principal">Tú entras como <b>administrador principal</b> con el usuario <b>admin</b>; tu contraseña es la variable <b>CLAVE_EDITOR</b> de Vercel. Puedes editar todo y manejar los perfiles.</p>
+      </div>
+      <div class="tb-perfiles" id="perfiles-lista"></div>
+      <form class="tb-form tb-liga-form" id="form-perfil" novalidate>
+        <h3>Nuevo administrador</h3>
+        <div class="tb-form-grid">
+          <label class="tb-field" for="perfil-nombre">Nombre<input id="perfil-nombre" name="nombre" type="text" maxlength="40" autocomplete="off"></label>
+          <label class="tb-field" for="perfil-usuario">Usuario para entrar (minúsculas, sin espacios)<input id="perfil-usuario" name="usuario" type="text" maxlength="30" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+          <label class="tb-field" for="perfil-clave">Contraseña (mínimo 6 caracteres)<input id="perfil-clave" name="clave" type="password" maxlength="100" autocomplete="new-password"></label>
+          <div class="tb-ancho" data-permisos-nuevo></div>
+        </div>
+        <p class="tb-perfil-msg" hidden></p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Crear administrador</button></div>
+      </form>
+    </div>
+  </section>
+
+  <details class="tb-details" id="notas-datos">    <summary>Cómo se ordenaron los datos de la planilla</summary>
     <ul>
       <li>Es una copia de la planilla de Google Sheets del equipo, sin la hoja «calculos generales». Jaime se sacó de todas las hojas.</li>
       <li>La hoja «arbitraje galva mensual» es la Liga Galvarino de Peñalolén, y «arbitraje peñalolen mensual» con «inscripcion liga peñalolen» son la Liga Peñalolén.</li>
@@ -1383,7 +1418,7 @@ dash.calc('plantel_totales', {
   const RUTA_PRESTAMOS = 'data/camisetas/prestamos';
   const formPrest = document.getElementById('form-prestamo');
   const panelDevolver = document.getElementById('devolver-camiseta');
-  const puedeEditar = () => !document.querySelector('.tb.sin-permiso');
+  const puedeEditar = () => Boolean(document.querySelector('.tb.puede-camisetas'));
   const abrirFormPrestamo = (clave) => {
     if (!formPrest) return;
     formPrest.reset();
@@ -1990,6 +2025,7 @@ dash.draw('quitados', (ul) => {
     const b = T.el('button', 'tb-link', 'Restaurar');
     b.type = 'button';
     b.dataset.restaurar = q.id;
+    b.dataset.perm = 'jugadores';
     b.setAttribute('aria-label', 'Restaurar a ' + String(q.jugador || ''));
     li.append(nombre, b);
     return li;
@@ -2335,6 +2371,7 @@ dash.draw('numeros', (ul) => {
     const x = T.el('button', 'tb-quitar tb-quitar-mini');
     x.type = 'button';
     x.dataset.camisaQuitar = '';
+    x.dataset.perm = 'camisetas';
     x.dataset.modelo = r.modelo;
     x.dataset.numero = String(r.numero);
     if (r.nombre) x.dataset.nombre = r.nombre;
@@ -2349,6 +2386,7 @@ dash.draw('numeros', (ul) => {
   const b = T.el('button', null, '+');
   b.type = 'button';
   b.dataset.camisaAgregar = '';
+  mas.dataset.perm = 'camisetas';
   b.dataset.modelo = modelo;
   b.dataset.tipo = tipo;
   b.setAttribute('aria-label', 'Agregar camiseta ' + modelo + (tipo === 'nombre' ? ' con nombre' : ' del equipo'));
@@ -2388,6 +2426,7 @@ dash.draw('tabla-prestamos', (tbody) => {
     const dias = T.diasDesde(p.desde);
     if (dias != null && dias >= 0) tdDesde.append(T.el('span', 'tb-hace', dias === 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días'));
     const tdAccion = T.el('td', 'num tb-solo-editor');
+    tdAccion.dataset.perm = 'camisetas';
     const b = T.el('button', 'tb-btn', 'Devuelta');
     b.type = 'button';
     b.dataset.devolverId = p.id;
@@ -2425,6 +2464,7 @@ dash.draw('camisetas-quitadas', (ul) => {
     const b = T.el('button', 'tb-link', 'Restaurar');
     b.type = 'button';
     b.dataset.camisaRestaurar = q.id;
+    b.dataset.perm = 'camisetas';
     b.setAttribute('aria-label', 'Restaurar camiseta ' + q.modelo + ' número ' + q.numero);
     li.append(txt, b);
     return li;

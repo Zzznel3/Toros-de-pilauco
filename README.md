@@ -2,7 +2,19 @@
 
 Página del Club Deportivo Toros de Pilauco (rama de básquetbol): plantel, ligas, arbitraje, inscripciones, pagos y camisetas.
 
-Cualquiera con el enlace puede **ver** la página. Para **editar** (marcar pagos, agregar jugadores, ligas o camisetas, prestar camisetas) hay que tocar **"Ingresar para editar"** en el encabezado y escribir la clave de editor.
+Cualquiera con el enlace puede **ver** la página. Para **editar** hay que tocar **"Ingresar como administrador"** en el encabezado y entrar con usuario y contraseña.
+
+## Administradores
+
+- **Administrador principal:** usuario `admin` (se cambia con la variable `ADMIN_USUARIO`) y la contraseña de la variable `CLAVE_EDITOR` de Vercel. Puede editar todo y tiene la pestaña **Administradores**.
+- **Otros administradores:** el principal los crea en la pestaña Administradores con nombre, usuario, contraseña y las secciones que pueden editar:
+  - **Pagos:** marcar arbitraje e inscripciones ("Editar pagos").
+  - **Ligas:** crear, editar y eliminar ligas.
+  - **Jugadores:** agregar, quitar y restaurar jugadores.
+  - **Camisetas:** agregar y quitar camisetas, préstamos y devoluciones.
+- Cada uno ve solo los botones de lo que puede editar, y el servidor rechaza lo demás.
+- Si el principal cambia la contraseña de alguien o borra su perfil, esa persona pierde el acceso de inmediato.
+- **Historial:** cada cambio queda registrado con fecha, hora y quién lo hizo (pestaña **Historial**, solo para administradores). Se guardan los últimos 300.
 
 ## Cómo publicarla en Vercel (una sola vez)
 
@@ -30,14 +42,17 @@ Después, cada vez que subas un cambio a GitHub (`git push`), Vercel publica la 
 | `datos/*.json` | Datos copiados de la planilla de Google (arbitraje, ligas, inscripción, camisetas). |
 | `img/escudo.png` | Escudo del club. |
 | `api/estado.js` | Devuelve lo editado desde la página (lectura pública). |
-| `api/escribir.js` | Guarda o borra un cambio. Exige la clave de editor. |
-| `api/login.js` | Comprueba la clave de editor. |
+| `api/escribir.js` | Guarda o borra un cambio y lo anota en el historial. Exige una sesión con permiso para esa sección. |
+| `api/login.js` | Ingreso con usuario y contraseña; entrega una sesión firmada válida por 30 días. |
+| `api/yo.js` | Revisa la sesión guardada en el navegador y devuelve los permisos actuales. |
+| `api/historial.js` | Últimos cambios con quién los hizo (solo administradores). |
+| `api/perfiles.js` | Crear, cambiar y borrar administradores (solo el principal). |
 | `api/_redis.js` | Conexión a la base de datos Redis. |
 | `api/_semilla.js` | Datos iniciales copiados desde la página de Claude. |
 
 ## Para tener en cuenta
 
 - La página es **pública**: quien tenga el enlace ve quién debe y cuánto.
-- La clave de editor queda guardada en el navegador de quien la ingresó hasta que toque **Salir**.
-- Para cambiar la clave: edita `CLAVE_EDITOR` en Vercel y vuelve a publicar. Los editores tendrán que ingresarla de nuevo.
+- La sesión queda guardada en el navegador de quien ingresó (30 días) hasta que toque **Salir**. Las contraseñas se guardan cifradas en la base de datos.
+- Si cambias `CLAVE_EDITOR` en Vercel y vuelves a publicar, se cierran las sesiones de todos y cada uno tiene que volver a ingresar.
 - Los datos de la planilla (`datos/*.json`) son una copia del 23 de noviembre de 2026. Si cambias la planilla de Google y quieres traer esos cambios, hay que actualizar esos archivos.
