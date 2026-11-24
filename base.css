@@ -88,6 +88,21 @@ img { max-width: 100%; }
 }
 .tb-acceso-error { color: #ffb0b0; font-weight: 600; }
 
+/* Ojo para ver u ocultar la contraseña */
+.tb-ver-clave { position: relative; display: block; min-width: 0; }
+.tb-acceso .tb-ver-clave { display: inline-block; }
+.tb-ver-clave input[data-ver-clave] { padding-right: 38px; }
+.tb-ver-clave-btn {
+  position: absolute; right: 2px; top: 2px; bottom: 2px;
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; padding: 0; border: 0; border-radius: 4px;
+  background: none; color: var(--color-fg-muted); cursor: pointer;
+}
+.tb-ver-clave-btn:hover { color: var(--color-fg); }
+.tb-ver-clave-btn:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+.tb-acceso .tb-ver-clave-btn { color: rgba(255, 255, 255, 0.8); }
+.tb-acceso .tb-ver-clave-btn:hover { color: #ffffff; }
+
 /* Permisos por sección: cada control de edición lleva data-perm y solo se ve si el perfil tiene ese permiso */
 .tb:not(.puede-pagos) [data-perm~="pagos"],
 .tb:not(.puede-ligas) [data-perm~="ligas"],

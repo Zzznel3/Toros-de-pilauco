@@ -333,6 +333,45 @@
     use: (nombre) => Promise.resolve(nombre === 'db' ? db : nombre === 'user' ? usuario : null),
   };
 
+  // ---------- Botón con un ojo para ver u ocultar la contraseña ----------
+  const SVG_OJO = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+  const OJO_ABIERTO = SVG_OJO + '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const OJO_TACHADO = SVG_OJO + '<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1"/><path d="M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+  function pintarOjo(boton, visible) {
+    const texto = visible ? 'Ocultar contraseña' : 'Mostrar contraseña';
+    boton.innerHTML = visible ? OJO_TACHADO : OJO_ABIERTO;
+    boton.setAttribute('aria-pressed', String(visible));
+    boton.setAttribute('aria-label', texto);
+    boton.title = texto;
+  }
+
+  function agregarVerClave(raiz) {
+    for (const input of (raiz || document).querySelectorAll('input[type="password"]:not([data-ver-clave])')) {
+      input.dataset.verClave = '';
+      const caja = el('span', 'tb-ver-clave');
+      input.replaceWith(caja);
+      const boton = el('button', 'tb-ver-clave-btn');
+      boton.type = 'button';
+      pintarOjo(boton, false);
+      boton.addEventListener('click', () => {
+        const ver = input.type === 'password';
+        input.type = ver ? 'text' : 'password';
+        pintarOjo(boton, ver);
+        input.focus();
+      });
+      caja.append(input, boton);
+    }
+  }
+
+  function ocultarClaves(raiz) {
+    for (const input of (raiz || document).querySelectorAll('input[data-ver-clave]')) {
+      input.type = 'password';
+      const boton = input.parentNode.querySelector('.tb-ver-clave-btn');
+      if (boton) pintarOjo(boton, false);
+    }
+  }
+
   // ---------- Ingreso de administradores (en el encabezado) ----------
   let accesoAbierto = false;
 
@@ -353,13 +392,14 @@
       '<span class="tb-acceso-error" hidden></span>' +
       '</form>';
     cont.append(caja);
+    agregarVerClave(caja);
     const form = caja.querySelector('form');
     const error = caja.querySelector('.tb-acceso-error');
     caja.addEventListener('click', (e) => {
       const b = e.target.closest('[data-acceso]');
       if (!b) return;
       if (b.dataset.acceso === 'abrir') { accesoAbierto = true; pintarAcceso(); form.querySelector('[name="usuario"]').focus(); }
-      if (b.dataset.acceso === 'cancelar') { accesoAbierto = false; form.reset(); error.hidden = true; pintarAcceso(); }
+      if (b.dataset.acceso === 'cancelar') { accesoAbierto = false; form.reset(); ocultarClaves(form); error.hidden = true; pintarAcceso(); }
       if (b.dataset.acceso === 'salir') cerrarSesion();
     });
     form.addEventListener('submit', async (e) => {
@@ -376,6 +416,7 @@
         guardarSesion(j);
         accesoAbierto = false;
         form.reset();
+        ocultarClaves(form);
         aplicarPermiso();
       } catch (err) {
         error.textContent = err.status === 401 ? 'Usuario o contraseña incorrectos.' : err.message;
@@ -524,6 +565,7 @@
       card.append(cab, casillasPermisos(slug, p.permisos || []), clave, acciones, confirmar, msg);
       return card;
     }));
+    agregarVerClave(cont);
   }
 
   function montarPerfiles() {
@@ -548,6 +590,7 @@
             if (clave && clave.length < 6) { mostrar('La contraseña debe tener al menos 6 caracteres.', true); return; }
             await api('/api/perfiles', { method: 'POST', body: { op: 'actualizar', usuario: usuarioPerfil, permisos, clave: clave || undefined } });
             card.querySelector('input[name="clave"]').value = '';
+            ocultarClaves(card);
             mostrar(clave ? 'Guardado. Con la nueva contraseña, tendrá que volver a ingresar.' : 'Guardado.');
           }
           if (b.dataset.perfil === 'si') {
@@ -567,6 +610,7 @@
     if (form) {
       const permisosNuevo = form.querySelector('[data-permisos-nuevo]');
       if (permisosNuevo) permisosNuevo.replaceWith(casillasPermisos('nuevo-perfil', []));
+      agregarVerClave(form);
       const msg = form.querySelector('.tb-perfil-msg');
       const mostrar = (texto, error) => { msg.textContent = texto; msg.classList.toggle('is-error', Boolean(error)); msg.hidden = false; };
       form.addEventListener('submit', async (e) => {
@@ -584,6 +628,7 @@
         try {
           await api('/api/perfiles', { method: 'POST', body: { op: 'crear', nombre, usuario: usuarioNuevo, clave, permisos } });
           form.reset();
+          ocultarClaves(form);
           mostrar('Listo. ' + nombre + ' ya puede ingresar con el usuario «' + usuarioNuevo + '».');
           await cargarPerfiles();
           cargarHistorial();
