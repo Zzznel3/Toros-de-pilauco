@@ -423,7 +423,7 @@
         ocultarClaves(form);
         aplicarPermiso();
       } catch (err) {
-        error.textContent = err.status === 401 ? 'Usuario o contraseña incorrectos.' : err.message;
+        error.textContent = err.message || 'Usuario o contraseña incorrectos.';
         error.hidden = false;
       } finally {
         boton.disabled = false;

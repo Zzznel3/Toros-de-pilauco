@@ -190,6 +190,54 @@ function comandosHistorial(sesion, entrada) {
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ---------- Bloqueo por intentos fallidos al ingresar ----------
+// 5 contraseñas malas seguidas desde un mismo equipo (o 20 a un mismo usuario desde cualquier lugar)
+// bloquean el ingreso por 8 minutos. Las direcciones IP se guardan cifradas y se borran solas.
+const BLOQUEO_SEGUNDOS = 8 * 60;
+const MAX_FALLOS_EQUIPO = 5;
+const MAX_FALLOS_USUARIO = 20;
+const huella = (texto) => crypto.createHash('sha256').update(String(texto)).digest('hex').slice(0, 32);
+
+function ipDe(req) {
+  const h = req.headers || {};
+  const ip = h['x-real-ip'] || String(h['x-forwarded-for'] || '').split(',')[0] || (req.socket && req.socket.remoteAddress) || 'desconocida';
+  return String(ip).trim();
+}
+
+const clavesFallos = (req, usuario) => [PREFIJO + 'fallos:equipo:' + huella(ipDe(req)), PREFIJO + 'fallos:usuario:' + huella(usuario)];
+const segundos = (ttl) => (Number(ttl) > 0 ? Number(ttl) : BLOQUEO_SEGUNDOS);
+
+// Segundos que faltan para poder volver a intentar (0 si no está bloqueado).
+async function bloqueoRestante(req, usuario) {
+  const [kEquipo, kUsuario] = clavesFallos(req, usuario);
+  const [nEquipo, tEquipo, nUsuario, tUsuario] = await redis([['GET', kEquipo], ['TTL', kEquipo], ['GET', kUsuario], ['TTL', kUsuario]]);
+  let resta = 0;
+  if (Number(nEquipo) >= MAX_FALLOS_EQUIPO) resta = Math.max(resta, segundos(tEquipo));
+  if (Number(nUsuario) >= MAX_FALLOS_USUARIO) resta = Math.max(resta, segundos(tUsuario));
+  return resta;
+}
+
+// Anota una contraseña mala. Al llegar al límite, el bloqueo dura 8 minutos desde ese intento.
+async function anotarFallo(req, usuario) {
+  const [kEquipo, kUsuario] = clavesFallos(req, usuario);
+  const r = await redis([
+    ['SET', kEquipo, '0', 'EX', BLOQUEO_SEGUNDOS, 'NX'], ['INCR', kEquipo],
+    ['SET', kUsuario, '0', 'EX', BLOQUEO_SEGUNDOS, 'NX'], ['INCR', kUsuario],
+  ]);
+  const nEquipo = Number(r[1]);
+  const nUsuario = Number(r[3]);
+  const alargar = [];
+  if (nEquipo >= MAX_FALLOS_EQUIPO) alargar.push(['EXPIRE', kEquipo, BLOQUEO_SEGUNDOS]);
+  if (nUsuario >= MAX_FALLOS_USUARIO) alargar.push(['EXPIRE', kUsuario, BLOQUEO_SEGUNDOS]);
+  if (alargar.length) await redis(alargar);
+  return { restantes: Math.max(0, MAX_FALLOS_EQUIPO - nEquipo), bloqueado: alargar.length > 0 };
+}
+
+// Al entrar bien, se olvidan los intentos fallidos de ese equipo y de ese usuario.
+async function borrarFallos(req, usuario) {
+  await redis([['DEL', ...clavesFallos(req, usuario)]]);
+}
+
 function cuerpo(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   if (typeof req.body === 'string') { try { return JSON.parse(req.body); } catch (e) { return {}; } }
@@ -201,4 +249,5 @@ module.exports = {
   configurado, claveRedis, redis, leerTodo, inicializar,
   claveValida, nuevoToken, clavePerfilValida, datosClave, leerPerfil, permisosValidos,
   sesionPrincipal, sesionDe, puedeEscribir, comandosHistorial, esperar, cuerpo,
+  BLOQUEO_SEGUNDOS, bloqueoRestante, anotarFallo, borrarFallos,
 };
