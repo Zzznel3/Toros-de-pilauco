@@ -219,7 +219,7 @@
 .tb-modelo { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .tb-sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--color-border-line); background: var(--color-panel); }
 .tb-sw.is-blanca { background: #ffffff; border-color: #b9b9b9; }
-.tb-sw.is-negra { background: #161616; border-color: #161616; }
+.tb-sw.is-negra { background: #0b0b0b; border-color: #8a91a1; }
 .tb-sw.is-old { background: repeating-linear-gradient(45deg, var(--color-fg-muted) 0 2px, transparent 2px 4px); }
 .tb-nums { display: grid; grid-template-columns: 1fr; gap: var(--cds-gap-lg); }
 @container (min-width: 900px) { .tb-nums { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -257,24 +257,24 @@
 .tb-jersey small { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit; opacity: .8; }
 .tb-jersey.is-sin small { font-style: italic; text-transform: none; letter-spacing: 0; opacity: .6; }
 .tb-jersey.is-blanca { background: #ffffff; color: #161616; border-color: #c4c4c4; }
-.tb-jersey.is-negra { background: #161616; color: #f4f4f4; border-color: #3a3a3a; }
+.tb-jersey.is-negra { background: #0b0b0b; color: #f4f4f4; border-color: #5c6372; }
 
 .tb-details { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .tb-details summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
 .tb-details ul { padding-inline-start: 1.2em; margin-top: var(--cds-gap-sm); display: grid; gap: 4px; line-height: 1.5; max-width: 80ch; }
 .tb :focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
 
-/* Colores del Club Deportivo Toros de Pilauco: azul marino del escudo y las publicaciones, con blanco. Una sola apariencia, igual con el visor en modo claro u oscuro. */
+/* Colores del Club Deportivo Toros de Pilauco: encabezado en el azul marino del escudo con blanco; el resto de la página sobre fondo grafito. Una sola apariencia, igual con el visor en modo claro u oscuro. */
 #dash-root { --dash-gutter: 0; }
 .tb {
   --tb-gutter: clamp(16px, 4vw, 40px);
   --tb-marca: #22388a;
   --tb-marca-oscuro: #162660;
-  --color-bg: #1c2f6e;
-  --color-panel: #243a82;
+  --color-bg: #15181e;
+  --color-panel: #1f232b;
   --color-fg: #ffffff;
-  --color-fg-muted: #bcc7ea;
-  --color-border-line: #3a52a3;
+  --color-fg-muted: #aab2c3;
+  --color-border-line: #353b48;
   --color-ok: #4ade9a;
   --color-warn: #ffc94d;
   --color-bad: #ff7b7b;
@@ -290,6 +290,7 @@
   padding-inline: var(--tb-gutter);
 }
 .tb-marca {
+  --color-fg-muted: #bcc7ea;
   max-width: none;
   margin-inline: calc(-1 * var(--tb-gutter));
   padding: 28px var(--tb-gutter) 26px;
