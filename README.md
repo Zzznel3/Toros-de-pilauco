@@ -16,6 +16,19 @@ Cualquiera con el enlace puede **ver** la página. Para **editar** hay que tocar
 - Si el principal cambia la contraseña de alguien o borra su perfil, esa persona pierde el acceso de inmediato.
 - **Historial:** cada cambio queda registrado con fecha, hora y quién lo hizo (pestaña **Historial**, solo para administradores). Se guardan los últimos 300.
 
+## En el celular (como app)
+
+La página se puede instalar en el celular con el ícono del escudo, y abre a pantalla completa como una app:
+
+- **iPhone (Safari):** botón **Compartir** → **Agregar a inicio**.
+- **Android (Chrome):** menú **⋮** → **Instalar app** (o **Agregar a la pantalla principal**).
+
+En el celular aparece el botón **"Instalar app en el celular"** en el encabezado, con estas instrucciones. La app se actualiza sola con cada `git push`. Sin señal abre con lo último que se vio, pero para editar hay que tener conexión.
+
+## Seguridad del ingreso
+
+Cinco contraseñas malas seguidas desde un mismo equipo (o veinte a un mismo usuario desde cualquier lugar) bloquean el ingreso por **8 minutos**. Desde el tercer intento malo la página avisa cuántos quedan. Entrar bien borra el conteo.
+
 ## Cómo publicarla en Vercel (una sola vez)
 
 1. **Sube esta carpeta a GitHub.** Crea un repositorio vacío en github.com (por ejemplo `toros-de-pilauco`) y, desde esta carpeta:
@@ -41,6 +54,9 @@ Después, cada vez que subas un cambio a GitHub (`git push`), Vercel publica la 
 | `base.css` | Tamaños, fuentes (Inter y Oswald) y controles base. |
 | `datos/*.json` | Datos copiados de la planilla de Google (arbitraje, ligas, inscripción, camisetas). |
 | `img/escudo.png` | Escudo del club. |
+| `img/icono-*.png`, `img/apple-touch-icon.png`, `img/favicon-64.png` | Íconos de la app en el celular y de la pestaña del navegador, hechos a partir del escudo. |
+| `manifest.webmanifest` | Nombre, colores e íconos de la app para instalarla en el celular. |
+| `sw.js` | Hace que la app se pueda instalar y que abra sin señal con lo último que se vio (no guarda nada de los administradores). |
 | `api/estado.js` | Devuelve lo editado desde la página (lectura pública). |
 | `api/escribir.js` | Guarda o borra un cambio y lo anota en el historial. Exige una sesión con permiso para esa sección. |
 | `api/login.js` | Ingreso con usuario y contraseña; entrega una sesión firmada válida por 30 días. |

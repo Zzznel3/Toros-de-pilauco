@@ -88,6 +88,14 @@ img { max-width: 100%; }
 }
 .tb-acceso-error { color: #ffb0b0; font-weight: 600; }
 
+/* Instalar la app en el celular */
+.tb-instalar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 2px; font-size: var(--cds-font-size-caption); }
+.tb-instalar-ayuda { margin: 0; flex-basis: 100%; max-width: 46ch; color: #ffffff; line-height: 1.45; }
+
+/* Con la app instalada en el iPhone, que nada quede bajo la barra de inicio */
+.tb { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important; }
+.tb-editor { bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+
 /* Ojo para ver u ocultar la contraseña */
 .tb-ver-clave { position: relative; display: block; min-width: 0; }
 .tb-acceso .tb-ver-clave { display: inline-block; }

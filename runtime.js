@@ -446,6 +446,51 @@
     }
   }
 
+  // ---------- Instalar en el celular (ícono en la pantalla de inicio) ----------
+  let pedidoInstalar = null;
+  const yaInstalada = () => Boolean((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true);
+  const esIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const esCelular = () => esIOS() || /Android|Mobi/i.test(navigator.userAgent);
+
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); pedidoInstalar = e; pintarInstalar(); });
+  window.addEventListener('appinstalled', () => { pedidoInstalar = null; pintarInstalar(); });
+
+  function montarInstalar() {
+    const cont = document.querySelector('.tb-head-texto');
+    if (!cont || cont.querySelector('.tb-instalar')) return;
+    const caja = el('div', 'tb-instalar');
+    const boton = el('button', 'tb-acceso-btn', 'Instalar app en el celular');
+    boton.type = 'button';
+    const ayuda = el('p', 'tb-instalar-ayuda');
+    ayuda.hidden = true;
+    caja.append(boton, ayuda);
+    cont.append(caja);
+    boton.addEventListener('click', async () => {
+      if (pedidoInstalar) {
+        const pedido = pedidoInstalar;
+        pedidoInstalar = null;
+        pedido.prompt();
+        try { await pedido.userChoice; } catch (e) { /* el navegador no respondió */ }
+        pintarInstalar();
+        return;
+      }
+      ayuda.textContent = esIOS()
+        ? 'En el iPhone: toca el botón Compartir (el cuadrado con una flecha hacia arriba) y elige «Agregar a inicio». Queda el ícono del escudo en tu pantalla.'
+        : 'Abre el menú ⋮ del navegador y elige «Instalar app» o «Agregar a la pantalla principal». Queda el ícono del escudo en tu pantalla.';
+      ayuda.hidden = !ayuda.hidden;
+    });
+    pintarInstalar();
+  }
+
+  function pintarInstalar() {
+    const caja = document.querySelector('.tb-instalar');
+    if (caja) caja.hidden = yaInstalada() || !esCelular();
+  }
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => { /* sin app instalable */ }); });
+  }
+
   function pintarAviso() {
     const raiz = document.querySelector('.tb');
     if (!raiz) return;
@@ -651,6 +696,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     domListo = true;
     montarAcceso();
+    montarInstalar();
     montarPerfiles();
     redibujar();
     iniciarPermiso();
