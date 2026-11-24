@@ -24,6 +24,7 @@ const COLECCIONES = [
   'camisetas_extra',
   'camisetas_quitadas',
   'camisetas_prestamos',
+  'camisetas_no_disponibles',
 ];
 
 // Secciones que se pueden dar a cada administrador, y qué secciones permiten escribir en cada colección.
@@ -38,6 +39,7 @@ const PERMISO_DE = {
   camisetas_extra: ['camisetas'],
   camisetas_quitadas: ['camisetas'],
   camisetas_prestamos: ['camisetas'],
+  camisetas_no_disponibles: ['camisetas'],
 };
 
 // Administrador principal: entra con este usuario y la contraseña CLAVE_EDITOR (variable de Vercel).

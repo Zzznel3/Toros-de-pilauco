@@ -11,7 +11,7 @@ Cualquiera con el enlace puede **ver** la página. Para **editar** hay que tocar
   - **Pagos:** marcar arbitraje e inscripciones ("Editar pagos").
   - **Ligas:** crear, editar y eliminar ligas.
   - **Jugadores:** agregar, quitar y restaurar jugadores.
-  - **Camisetas:** agregar y quitar camisetas, préstamos y devoluciones.
+  - **Camisetas:** agregar y quitar camisetas, préstamos y devoluciones, y marcar qué camisetas del equipo están disponibles (botón **Marcar disponibles**).
 - Cada uno ve solo los botones de lo que puede editar, y el servidor rechaza lo demás.
 - Si el principal cambia la contraseña de alguien o borra su perfil, esa persona pierde el acceso de inmediato.
 - **Historial:** cada cambio queda registrado con fecha, hora y quién lo hizo (pestaña **Historial**, solo para administradores). Se guardan los últimos 300.

@@ -27,6 +27,7 @@
     camisetas_extra: 'camisetas_extra',
     camisetas_quitadas: 'camisetas_quitadas',
     camisetas_prestamos: 'camisetas_prestamos',
+    camisetas_no_disponibles: 'camisetas_no_disponibles',
   };
   const RUTAS = {
     'data/plantel/extra': 'plantel_extra',
@@ -38,6 +39,7 @@
     'data/camisetas/extra': 'camisetas_extra',
     'data/camisetas/quitadas': 'camisetas_quitadas',
     'data/camisetas/prestamos': 'camisetas_prestamos',
+    'data/camisetas/no-disponibles': 'camisetas_no_disponibles',
   };
   const PERMISOS = ['pagos', 'ligas', 'jugadores', 'camisetas'];
   const NOMBRE_PERMISO = { pagos: 'Pagos', ligas: 'Ligas', jugadores: 'Jugadores', camisetas: 'Camisetas' };
@@ -227,6 +229,8 @@
       case 'camisetas_prestamos':
         if (borra) return 'Marcó como devuelta la ' + camiseta(d) + (d.a ? ' (estaba con ' + d.a + ')' : '');
         return 'Prestó la ' + camiseta(d) + ' a ' + (d.a || 'alguien');
+      case 'camisetas_no_disponibles':
+        return (borra ? 'Marcó como disponible la ' : 'Marcó como no disponible la ') + camiseta(d);
       default:
         return '';
     }

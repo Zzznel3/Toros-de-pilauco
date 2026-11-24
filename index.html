@@ -258,6 +258,22 @@
 .tb-jersey.is-sin small { font-style: italic; text-transform: none; letter-spacing: 0; opacity: .6; }
 .tb-jersey.is-blanca { background: #ffffff; color: #161616; border-color: #c4c4c4; }
 .tb-jersey.is-negra { background: #0b0b0b; color: #f4f4f4; border-color: #5c6372; }
+/* Camisetas del equipo no disponibles (perdidas, rotas, en lavado…) y modo «Marcar disponibles» */
+.tb-jersey.is-no-disp { opacity: .4; background-image: linear-gradient(to top right, transparent calc(50% - 1.5px), var(--color-bad) calc(50% - 1.5px), var(--color-bad) calc(50% + 1.5px), transparent calc(50% + 1.5px)); }
+.tb-jersey.is-no-disp::before { content: ""; position: absolute; top: 4px; left: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--color-bad); }
+.tb-leyenda-cam { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-leyenda-cam span { display: inline-flex; align-items: center; gap: 6px; }
+.tb-punto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.tb-punto.is-warn { background: var(--color-warn); }
+.tb-punto.is-bad { background: var(--color-bad); }
+.tb.puede-camisetas .tb-equipo.marcando .tb-equipo-card { border-color: color-mix(in srgb, var(--color-fg) 30%, var(--color-border-line)); }
+.tb.puede-camisetas .tb-equipo.marcando .tb-quitar-mini, .tb.puede-camisetas .tb-equipo.marcando .tb-jersey-add { display: none !important; }
+.tb.puede-camisetas .tb-equipo.marcando .tb-jersey.is-prestada { cursor: not-allowed; }
+.tb.puede-camisetas .tb-equipo.marcando .tb-jersey.is-no-disp { opacity: .55; }
+.tb.puede-camisetas .tb-equipo.marcando .tb-jersey[aria-pressed="true"]::after { content: "✓"; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--color-ok); color: #0b0b0b; font-size: 11px; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--color-panel); }
+.tb-marca-ok { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--color-ok); color: #0b0b0b; font-size: 11px; font-weight: 700; vertical-align: middle; }
+.tb-editor-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-sec-top-acciones .tb-btn[aria-pressed="true"] { background: var(--tb-acento); border-color: var(--tb-acento); color: var(--tb-acento-texto); }
 
 .tb-details { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .tb-details summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
@@ -560,9 +576,10 @@
       <div class="tb-sec-head">
         <div class="tb-sec-top">
           <h2>Camisetas del equipo</h2>
-          <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-camisa-nueva>+ Agregar camiseta</button></div>
+          <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-marcar-disponibles aria-pressed="false">Marcar disponibles</button><button type="button" class="tb-btn" data-camisa-nueva>+ Agregar camiseta</button></div>
         </div>
-        <p class="tb-note">Camisetas sin nombre estampado, que son del equipo y las puede usar cualquiera. En total hay <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>.</p>
+        <p class="tb-note">Camisetas sin nombre estampado, que son del equipo y las puede usar cualquiera. En total hay <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>; disponibles ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Todas">—</b>.</p>
+        <p class="tb-leyenda-cam"><span><i class="tb-punto is-warn"></i>prestada</span><span><i class="tb-punto is-bad"></i>no disponible (perdida, rota, en lavado…)</span></p>
       </div>
       <form class="tb-form tb-liga-form tb-solo-editor" id="form-camiseta" hidden novalidate data-perm="camisetas">
         <h3>Nueva camiseta</h3>
@@ -578,17 +595,29 @@
       </form>
       <div class="tb-equipo">
         <article class="tb-equipo-card" id="equipo-old">
-          <div class="tb-equipo-top"><h3><span class="tb-sw is-old"></span>Old</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Old">—</span> <span class="tb-equipo-sub">con el equipo · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Old">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Old">—</b></span></p></div>
+          <div class="tb-equipo-top"><h3><span class="tb-sw is-old"></span>Old</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Old">—</span> <span class="tb-equipo-sub">disponibles · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Old">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Old">—</b> · no disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Old">—</b></span></p></div>
           <ul class="tb-num-list" data-draw="numeros" data-modelo="Old" data-tipo="equipo" data-source="camisetas_actual"></ul>
         </article>
         <article class="tb-equipo-card" id="equipo-blancas">
-          <div class="tb-equipo-top"><h3><span class="tb-sw is-blanca"></span>Blancas</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Blanca">—</span> <span class="tb-equipo-sub">con el equipo · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Blanca">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Blanca">—</b></span></p></div>
+          <div class="tb-equipo-top"><h3><span class="tb-sw is-blanca"></span>Blancas</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Blanca">—</span> <span class="tb-equipo-sub">disponibles · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Blanca">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Blanca">—</b> · no disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Blanca">—</b></span></p></div>
           <ul class="tb-num-list" data-draw="numeros" data-modelo="Blanca" data-tipo="equipo" data-source="camisetas_actual"></ul>
         </article>
         <article class="tb-equipo-card" id="equipo-negras">
-          <div class="tb-equipo-top"><h3><span class="tb-sw is-negra"></span>Negras</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Negra">—</span> <span class="tb-equipo-sub">con el equipo · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Negra">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Negra">—</b></span></p></div>
+          <div class="tb-equipo-top"><h3><span class="tb-sw is-negra"></span>Negras</h3><p><span class="tb-equipo-num dash-skeleton" data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Negra">—</span> <span class="tb-equipo-sub">disponibles · de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Negra">—</b> · prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Negra">—</b> · no disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Negra">—</b></span></p></div>
           <ul class="tb-num-list" data-draw="numeros" data-modelo="Negra" data-tipo="equipo" data-source="camisetas_actual"></ul>
         </article>
+      </div>
+      <div class="tb-editor tb-solo-editor" id="marcar-disponibles" hidden data-perm="camisetas">
+        <p class="tb-editor-titulo">Toca las camisetas para marcarlas como disponibles <span class="tb-marca-ok">✓</span> o no disponibles.</p>
+        <p class="tb-editor-sub" data-draw="marcar-resumen">—</p>
+        <p class="tb-msg-error" data-msg="prestada" hidden>Esa camiseta está prestada. Primero márcala como devuelta en «Camisetas del equipo prestadas».</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó todo. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
+        <div class="tb-acciones"><button type="button" class="tb-btn is-primary" data-marcar="guardar">Guardar</button><button type="button" class="tb-btn" data-marcar="todas">Todas disponibles</button><button type="button" class="tb-btn" data-marcar="cancelar">Cancelar</button></div>
+      </div>
+      <div class="tb-editor tb-solo-editor" id="disponible-camiseta" hidden data-perm="camisetas">
+        <p class="tb-editor-titulo" data-draw="no-disponible-sel">—</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
+        <div class="tb-acciones"><button type="button" class="tb-btn is-primary" data-disponible="si">Sí, ya está disponible</button><button type="button" class="tb-btn" data-disponible="no">Cancelar</button></div>
       </div>
     </div>
     <div class="tb-sec" id="camisetas-prestadas">
@@ -597,7 +626,7 @@
           <h2>Camisetas del equipo prestadas</h2>
           <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-prestar-nueva>+ Prestar camiseta</button></div>
         </div>
-        <p class="tb-note">Con el equipo ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="en_equipo" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla o marcarla como devuelta.</span></p>
+        <p class="tb-note">Disponibles ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. No disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla o marcarla como devuelta.</span></p>
       </div>
       <form class="tb-form tb-liga-form tb-solo-editor" id="form-prestamo" hidden novalidate data-perm="camisetas">
         <h3>Prestar camiseta del equipo</h3>
@@ -754,7 +783,7 @@ window.toros = (() => {
   const fechaLocal = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null; };
   const fechaCorta = (iso) => { const d = fechaLocal(iso); return d ? d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; };
   const diasDesde = (iso) => { const d = fechaLocal(iso); if (!d) return null; const h = fechaLocal(hoy()); return Math.round((h - d) / 86400000); };
-  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null };
+  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null, marcando: false, noDispPend: new Set(), noDispSel: null };
 })();
 </script>
 
@@ -1090,17 +1119,40 @@ dash.calc('prestamos_actual', {
   },
 });
 
+dash.calc('no_disponibles_actual', {
+  inputs: ['camisetas_no_disponibles', 'camisetas_actual', 'prestamos_actual'],
+  title: 'Camisetas del equipo no disponibles',
+  description: 'Camisetas del equipo marcadas como no disponibles (perdidas, rotas, en lavado…) desde la página. No cuenta las que ya no están, las que ahora tienen nombre ni las prestadas (esas se cuentan como prestadas).',
+  fn: (marcas, camisetas, prestamos) => {
+    const clave = (m, n) => String(m == null ? '' : m).trim().toLowerCase() + '|' + Number(n);
+    const delEquipo = new Map(camisetas.filter((c) => !c.nombre).map((c) => [clave(c.modelo, c.numero), c]));
+    const prestadas = new Set(prestamos.map((p) => clave(p.modelo, p.numero)));
+    const vistos = new Set();
+    const filas = [];
+    for (const m of marcas || []) {
+      const k = clave(m.modelo, m.numero);
+      const c = delEquipo.get(k);
+      if (!c || prestadas.has(k) || vistos.has(k)) continue;
+      vistos.add(k);
+      filas.push({ id: m.id, modelo: c.modelo, numero: c.numero, camiseta: c.modelo + ' n.º ' + c.numero, desde: m.desde || null });
+    }
+    return filas;
+  },
+});
+
 dash.calc('camisetas_por_modelo', {
-  inputs: ['camisetas_actual', 'prestamos_actual'],
+  inputs: ['camisetas_actual', 'prestamos_actual', 'no_disponibles_actual'],
   title: 'Camisetas por modelo',
-  description: 'Cuántas camisetas hay de cada modelo: del equipo (sin nombre estampado), cuántas de esas están prestadas y cuántas quedan con el equipo, y las con nombre.',
-  fn: (camisetas, prestamos) => {
+  description: 'Cuántas camisetas hay de cada modelo: del equipo (sin nombre estampado), cuántas de esas están prestadas, cuántas están marcadas como no disponibles, cuántas quedan disponibles, y las con nombre.',
+  fn: (camisetas, prestamos, noDisponibles) => {
     const clave = (m, n) => String(m == null ? '' : m).trim().toLowerCase() + '|' + Number(n);
     const prestadas = new Set(prestamos.map((p) => clave(p.modelo, p.numero)));
+    const marcadas = new Set(noDisponibles.map((p) => clave(p.modelo, p.numero)));
     const fila = (modelo, rs) => {
       const equipo = rs.filter((r) => !r.nombre);
       const fuera = equipo.filter((r) => prestadas.has(clave(r.modelo, r.numero))).length;
-      return { modelo, del_equipo: equipo.length, prestadas: fuera, en_equipo: equipo.length - fuera, con_nombre: rs.length - equipo.length, total: rs.length };
+      const malas = equipo.filter((r) => marcadas.has(clave(r.modelo, r.numero))).length;
+      return { modelo, del_equipo: equipo.length, prestadas: fuera, en_equipo: equipo.length - fuera, no_disponibles: malas, disponibles: equipo.length - fuera - malas, con_nombre: rs.length - equipo.length, total: rs.length };
     };
     const modelos = [...new Set(['Old', 'Blanca', 'Negra', ...camisetas.map((r) => r.modelo)])];
     return [...modelos.map((m) => fila(m, camisetas.filter((r) => r.modelo === m))), fila('Todas', camisetas)];
@@ -1485,10 +1537,103 @@ dash.calc('plantel_totales', {
       finally { b.disabled = false; }
     });
   }
+  // Camisetas del equipo disponibles o no (perdidas, rotas, en lavado…)
+  const RUTA_NO_DISP = 'data/camisetas/no-disponibles';
+  const claveCam = (m, n) => norm(m) + '|' + Number(n);
+  const panelMarcar = document.getElementById('marcar-disponibles');
+  const panelDisp = document.getElementById('disponible-camiseta');
+  const botonesMarcar = [...document.querySelectorAll('[data-marcar-disponibles]')];
+  const pintarMarcando = () => {
+    for (const eq of document.querySelectorAll('.tb-equipo')) eq.classList.toggle('marcando', T.marcando);
+    for (const b of botonesMarcar) b.setAttribute('aria-pressed', String(T.marcando));
+    if (panelMarcar) panelMarcar.hidden = !T.marcando;
+    dash.draw('numeros');
+    dash.draw('marcar-resumen');
+  };
+  const cerrarDisponible = () => { T.noDispSel = null; if (panelDisp) { panelDisp.hidden = true; avisar(panelDisp, null); } dash.draw('no-disponible-sel'); };
+  const abrirDisponible = (id) => {
+    if (!panelDisp) return;
+    cerrarFormPrestamo();
+    cerrarDevolver();
+    T.noDispSel = id;
+    avisar(panelDisp, null);
+    panelDisp.hidden = false;
+    dash.draw('no-disponible-sel');
+    const si = panelDisp.querySelector('[data-disponible="si"]');
+    if (si) si.focus({ preventScroll: true });
+  };
+  const abrirMarcar = () => {
+    if (dash.data('no_disponibles_actual').status !== 'ok') return;
+    cerrarFormPrestamo();
+    cerrarDevolver();
+    cerrarDisponible();
+    cerrarFormCam();
+    cerrarConfirmarCam();
+    T.noDispPend = new Set(datos('no_disponibles_actual').map((r) => claveCam(r.modelo, r.numero)));
+    T.marcando = true;
+    if (panelMarcar) avisar(panelMarcar, null);
+    pintarMarcando();
+  };
+  const cerrarMarcar = () => { T.marcando = false; T.noDispPend = new Set(); if (panelMarcar) avisar(panelMarcar, null); pintarMarcando(); };
+  const alternarMarca = (chip) => {
+    if (chip.dataset.prestamo) { if (panelMarcar) avisar(panelMarcar, 'prestada'); return; }
+    if (panelMarcar) avisar(panelMarcar, null);
+    const k = claveCam(chip.dataset.modelo, chip.dataset.numero);
+    if (T.noDispPend.has(k)) T.noDispPend.delete(k);
+    else T.noDispPend.add(k);
+    const teniaFoco = document.activeElement === chip;
+    dash.draw('numeros');
+    dash.draw('marcar-resumen');
+    if (teniaFoco) {
+      const nuevo = [...document.querySelectorAll('.tb-equipo [data-camisa-chip]')].find((c) => c.dataset.modelo === chip.dataset.modelo && c.dataset.numero === chip.dataset.numero);
+      if (nuevo) nuevo.focus({ preventScroll: true });
+    }
+  };
+  const guardarMarcas = async () => {
+    const yaMarcadas = new Map(datos('no_disponibles_actual').map((r) => [claveCam(r.modelo, r.numero), r]));
+    const prestadas = new Set(datos('prestamos_actual').map((p) => claveCam(p.modelo, p.numero)));
+    const db = await baseDatos();
+    for (const c of datos('camisetas_actual').filter((x) => !x.nombre)) {
+      const k = claveCam(c.modelo, c.numero);
+      if (prestadas.has(k)) continue;
+      const quiere = T.noDispPend.has(k);
+      const tiene = yaMarcadas.get(k);
+      if (quiere && !tiene) await db.doc(RUTA_NO_DISP + '/' + (T.slug(c.modelo) || 'modelo') + '-' + c.numero).set({ modelo: c.modelo, numero: c.numero, desde: T.hoy(), registrado: new Date().toISOString() });
+      if (!quiere && tiene) await db.doc(RUTA_NO_DISP + '/' + tiene.id).delete();
+    }
+  };
+  for (const b of botonesMarcar) b.addEventListener('click', () => { if (T.marcando) cerrarMarcar(); else abrirMarcar(); });
+  if (panelMarcar) {
+    panelMarcar.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-marcar]');
+      if (!b) return;
+      if (b.dataset.marcar === 'cancelar') { cerrarMarcar(); return; }
+      if (b.dataset.marcar === 'todas') { T.noDispPend = new Set(); avisar(panelMarcar, null); dash.draw('numeros'); dash.draw('marcar-resumen'); return; }
+      b.disabled = true;
+      avisar(panelMarcar, null);
+      try { await guardarMarcas(); cerrarMarcar(); }
+      catch { avisar(panelMarcar, 'error'); }
+      finally { b.disabled = false; }
+    });
+  }
+  if (panelDisp) {
+    panelDisp.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-disponible]');
+      if (!b) return;
+      if (b.dataset.disponible === 'no' || !T.noDispSel) { cerrarDisponible(); return; }
+      b.disabled = true;
+      try { const db = await baseDatos(); await db.doc(RUTA_NO_DISP + '/' + T.noDispSel).delete(); cerrarDisponible(); }
+      catch { avisar(panelDisp, 'error'); }
+      finally { b.disabled = false; }
+    });
+  }
+
   if (panelCamisetas) {
     const activarChip = (chip) => {
       if (!puedeEditar()) return;
+      if (T.marcando) { alternarMarca(chip); return; }
       if (chip.dataset.prestamo) abrirDevolver(chip.dataset.prestamo);
+      else if (chip.dataset.noDisp) abrirDisponible(chip.dataset.noDisp);
       else abrirFormPrestamo(chip.dataset.modelo + '|' + chip.dataset.numero);
     };
     panelCamisetas.addEventListener('click', async (e) => {
@@ -2349,22 +2494,31 @@ dash.draw('numeros', (ul) => {
     .sort((a, b) => a.numero - b.numero);
   const pr = dash.data('prestamos_actual');
   const prestadaA = new Map((pr.status === 'ok' && Array.isArray(pr.data) ? pr.data : []).map((p) => [String(p.modelo).toLowerCase() + '|' + p.numero, p]));
+  const nd = dash.data('no_disponibles_actual');
+  const noDispDe = new Map((nd.status === 'ok' && Array.isArray(nd.data) ? nd.data : []).map((p) => [String(p.modelo).toLowerCase() + '|' + p.numero, p]));
+  const marcando = Boolean(T.marcando && document.querySelector('.tb.puede-camisetas'));
   const items = filas.map((r) => {
     const delEquipo = !r.nombre;
-    const prestamo = delEquipo ? prestadaA.get(String(r.modelo).toLowerCase() + '|' + r.numero) : null;
-    const li = T.el('li', 'tb-jersey ' + cls + (delEquipo ? ' is-sin' : '') + (tipo === 'equipo' ? ' is-mini' : '') + (r.agregada ? ' is-agregada' : '') + (prestamo ? ' is-prestada' : ''));
+    const k = String(r.modelo).toLowerCase() + '|' + r.numero;
+    const prestamo = delEquipo ? prestadaA.get(k) : null;
+    const marca = delEquipo && !prestamo ? noDispDe.get(k) || null : null;
+    const noDisp = delEquipo && !prestamo && (marcando ? T.noDispPend.has(k) : Boolean(marca));
+    const li = T.el('li', 'tb-jersey ' + cls + (delEquipo ? ' is-sin' : '') + (tipo === 'equipo' ? ' is-mini' : '') + (r.agregada ? ' is-agregada' : '') + (prestamo ? ' is-prestada' : '') + (noDisp ? ' is-no-disp' : ''));
     const num = T.el('b', null, String(r.numero));
     num.dataset.source = 'camisetas_actual';
     num.dataset.field = 'numero';
     num.dataset.where = T.where({ modelo: r.modelo, numero: r.numero });
     li.append(num);
     if (tipo !== 'equipo') li.append(T.el('small', null, r.nombre || 'del equipo'));
-    li.setAttribute('aria-label', 'Número ' + r.numero + ', ' + (r.nombre || 'del equipo') + (prestamo ? ', prestada a ' + (prestamo.a || 'alguien') : '') + (r.agregada ? ', agregada a mano' : ''));
+    li.setAttribute('aria-label', 'Número ' + r.numero + ', ' + (r.nombre || 'del equipo') + (prestamo ? ', prestada a ' + (prestamo.a || 'alguien') : '') + (noDisp ? ', no disponible' + (marca && marca.desde && !marcando ? ' desde el ' + T.fechaCorta(marca.desde) : '') : '') + (r.agregada ? ', agregada a mano' : ''));
+    if (noDisp && marca && marca.desde && !marcando) li.title = 'No disponible desde el ' + T.fechaCorta(marca.desde);
     if (delEquipo) {
       li.dataset.camisaChip = '';
       li.dataset.modelo = r.modelo;
       li.dataset.numero = String(r.numero);
       if (prestamo) li.dataset.prestamo = prestamo.id;
+      if (marca && !marcando) li.dataset.noDisp = marca.id;
+      if (marcando && !prestamo) li.setAttribute('aria-pressed', String(!noDisp));
       li.tabIndex = 0;
       li.setAttribute('role', 'button');
     }
@@ -2398,7 +2552,8 @@ dash.draw('select-camisetas-libres', (sel) => {
   const s = dash.data('camisetas_actual');
   const pr = dash.data('prestamos_actual');
   if (s.status !== 'ok') { sel.replaceChildren(new Option('Cargando…', '')); return; }
-  const prestadas = new Set((pr.status === 'ok' && Array.isArray(pr.data) ? pr.data : []).map((p) => String(p.modelo).toLowerCase() + '|' + p.numero));
+  const nd = dash.data('no_disponibles_actual');
+  const prestadas = new Set([...(pr.status === 'ok' && Array.isArray(pr.data) ? pr.data : []), ...(nd.status === 'ok' && Array.isArray(nd.data) ? nd.data : [])].map((p) => String(p.modelo).toLowerCase() + '|' + p.numero));
   const orden = { Old: 0, Blanca: 1, Negra: 2 };
   const libres = s.data.filter((c) => !c.nombre && !prestadas.has(String(c.modelo).toLowerCase() + '|' + c.numero))
     .sort((a, b) => (orden[a.modelo] ?? 9) - (orden[b.modelo] ?? 9) || a.numero - b.numero);
@@ -2443,6 +2598,26 @@ dash.draw('prestamo-sel', (el) => {
   const p = id && s.status === 'ok' ? s.data.find((x) => x.id === id) : null;
   if (!p) { el.textContent = '—'; return; }
   el.textContent = 'La ' + p.camiseta + ' está prestada a ' + (p.a || 'alguien') + ' desde el ' + T.fechaCorta(p.desde) + '. ¿Ya la devolvió?';
+});
+
+dash.draw('marcar-resumen', (el) => {
+  const s = dash.data('camisetas_actual');
+  if (s.status !== 'ok' || !T.marcando) { el.textContent = '—'; return; }
+  const pr = dash.data('prestamos_actual');
+  const prestadas = new Set((pr.status === 'ok' && Array.isArray(pr.data) ? pr.data : []).map((p) => String(p.modelo).toLowerCase() + '|' + p.numero));
+  const equipo = s.data.filter((c) => !c.nombre);
+  const clave = (c) => String(c.modelo).toLowerCase() + '|' + c.numero;
+  const fuera = equipo.filter((c) => prestadas.has(clave(c))).length;
+  const malas = equipo.filter((c) => !prestadas.has(clave(c)) && T.noDispPend.has(clave(c))).length;
+  el.textContent = 'Disponibles: ' + (equipo.length - fuera - malas) + ' de ' + equipo.length + ' · no disponibles: ' + malas + ' · prestadas: ' + fuera + '. Se guarda al tocar «Guardar».';
+});
+
+dash.draw('no-disponible-sel', (el) => {
+  const id = T.noDispSel;
+  const s = dash.data('no_disponibles_actual');
+  const p = id && s.status === 'ok' ? s.data.find((x) => x.id === id) : null;
+  if (!p) { el.textContent = '—'; return; }
+  el.textContent = 'La ' + p.camiseta + ' está marcada como no disponible' + (p.desde ? ' desde el ' + T.fechaCorta(p.desde) : '') + '. ¿Ya está disponible?';
 });
 
 dash.draw('camiseta-sel', (el) => {
