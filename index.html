@@ -1249,6 +1249,16 @@ dash.calc('plantel_totales', {
   };
   const avisar = (raiz, clave) => { for (const m of raiz.querySelectorAll('[data-msg]')) m.hidden = m.dataset.msg !== clave; };
 
+  // Un solo cuadro de edición abierto a la vez: al abrir uno (prestar, quitar, editar liga…) se cierran los demás.
+  const cuadros = new Map(); // nombre -> { abierto(), cerrar() }
+  const registrarCuadro = (nombre, abierto, cerrar) => cuadros.set(nombre, { abierto, cerrar });
+  const soloEste = (nombre) => {
+    for (const [n, c] of cuadros) {
+      if (n === nombre) continue;
+      try { if (c.abierto()) c.cerrar(); } catch (e) { console.error('cerrar ' + n, e); }
+    }
+  };
+
   usar('user').then(async (user) => {
     let puede = null;
     try { puede = user ? await user.canEdit() : null; } catch { puede = null; }
@@ -1315,13 +1325,15 @@ dash.calc('plantel_totales', {
     const abrirBtn = card.querySelector('[data-add="abrir"]');
     const form = card.querySelector('form');
     if (!abrirBtn || !form) continue;
-    const mostrar = (abierto) => {
+    const mostrar = (abierto, sinFoco) => {
+      if (abierto) soloEste('jugador-nuevo');
       form.hidden = !abierto;
       abrirBtn.hidden = abierto;
       abrirBtn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
       if (abierto) { const n = form.querySelector('[name="nombre"]'); if (n) n.focus(); }
-      else { form.reset(); T.formJugadorLigas = new Set(); dash.draw('form-jugador-ligas'); avisar(form, null); abrirBtn.focus(); }
+      else { form.reset(); T.formJugadorLigas = new Set(); dash.draw('form-jugador-ligas'); avisar(form, null); if (!sinFoco) abrirBtn.focus(); }
     };
+    registrarCuadro('jugador-nuevo', () => !form.hidden, () => mostrar(false, true));
     abrirBtn.addEventListener('click', () => mostrar(true));
     const cancelar = form.querySelector('[data-add="cancelar"]');
     if (cancelar) cancelar.addEventListener('click', () => mostrar(false));
@@ -1371,6 +1383,15 @@ dash.calc('plantel_totales', {
   }
 
   // Quitar jugador (todos) y restaurar
+  const confirmacionesJugador = () => [...document.querySelectorAll('.tb-plantel .tb-player [data-slot="confirmar"]')].filter((c) => !c.hidden);
+  const cerrarQuitarJugador = () => {
+    for (const c of confirmacionesJugador()) {
+      c.hidden = true;
+      const q = c.closest('.tb-player').querySelector('[data-accion="quitar"]');
+      if (q) q.hidden = false;
+    }
+  };
+  registrarCuadro('jugador-quitar', () => confirmacionesJugador().length > 0, cerrarQuitarJugador);
   for (const lista of document.querySelectorAll('.tb-plantel')) {
     lista.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-accion]');
@@ -1381,6 +1402,8 @@ dash.calc('plantel_totales', {
       const confirmar = li.querySelector('[data-slot="confirmar"]');
       const error = li.querySelector('[data-slot="error-quitar"]');
       if (b.dataset.accion === 'quitar') {
+        soloEste('jugador-quitar');
+        cerrarQuitarJugador();
         if (quitar) quitar.hidden = true;
         if (confirmar) confirmar.hidden = false;
         if (error) error.hidden = true;
@@ -1440,6 +1463,7 @@ dash.calc('plantel_totales', {
   };
   const abrirFormCam = (modelo, conNombre) => {
     if (!formCam) return;
+    soloEste('cam-form');
     formCam.reset();
     avisar(formCam, null);
     T.camisaEdit = null;
@@ -1488,6 +1512,8 @@ dash.calc('plantel_totales', {
     }
   };
   const cerrarConfirmarCam = () => { T.camisaSel = null; if (confirmarCam) { confirmarCam.hidden = true; avisar(confirmarCam, null); } dash.draw('camiseta-sel'); };
+  registrarCuadro('cam-form', () => Boolean(formCam && !formCam.hidden), cerrarFormCam);
+  registrarCuadro('cam-quitar', () => Boolean(confirmarCam && !confirmarCam.hidden), cerrarConfirmarCam);
   for (const b of document.querySelectorAll('[data-camisa-nueva]')) b.addEventListener('click', () => abrirFormCam(null, false));
   if (formCam) {
     const cancelar = formCam.querySelector('[data-form-camisa="cancelar"]');
@@ -1534,6 +1560,7 @@ dash.calc('plantel_totales', {
       if (editar) { abrirEditarCam(camisaDe(editar)); return; }
       const quitar = e.target.closest('[data-camisa-quitar]');
       if (quitar) {
+        soloEste('cam-quitar');
         T.camisaSel = { modelo: quitar.dataset.modelo, numero: Number(quitar.dataset.numero), nombre: quitar.dataset.nombre || null, id: quitar.dataset.id || null };
         if (confirmarCam) { avisar(confirmarCam, null); confirmarCam.hidden = false; }
         dash.draw('camiseta-sel');
@@ -1583,6 +1610,7 @@ dash.calc('plantel_totales', {
   const puedeEditar = () => Boolean(document.querySelector('.tb.puede-camisetas'));
   const abrirFormPrestamo = (clave) => {
     if (!formPrest) return;
+    soloEste('cam-prestar');
     formPrest.reset();
     avisar(formPrest, null);
     T.prestamoSel = clave || '';
@@ -1596,8 +1624,11 @@ dash.calc('plantel_totales', {
   };
   const cerrarFormPrestamo = () => { if (!formPrest) return; formPrest.hidden = true; formPrest.reset(); avisar(formPrest, null); T.prestamoSel = ''; };
   const cerrarDevolver = () => { T.devolverSel = null; if (panelDevolver) { panelDevolver.hidden = true; avisar(panelDevolver, null); } dash.draw('prestamo-sel'); };
+  registrarCuadro('cam-prestar', () => Boolean(formPrest && !formPrest.hidden), cerrarFormPrestamo);
+  registrarCuadro('cam-devolver', () => Boolean(panelDevolver && !panelDevolver.hidden), cerrarDevolver);
   const abrirDevolver = (id) => {
     if (!panelDevolver) return;
+    soloEste('cam-devolver');
     T.devolverSel = id;
     avisar(panelDevolver, null);
     panelDevolver.hidden = false;
@@ -1663,8 +1694,7 @@ dash.calc('plantel_totales', {
   const cerrarDisponible = () => { T.noDispSel = null; if (panelDisp) { panelDisp.hidden = true; avisar(panelDisp, null); } dash.draw('no-disponible-sel'); };
   const abrirDisponible = (id) => {
     if (!panelDisp) return;
-    cerrarFormPrestamo();
-    cerrarDevolver();
+    soloEste('cam-disponible');
     T.noDispSel = id;
     avisar(panelDisp, null);
     panelDisp.hidden = false;
@@ -1674,17 +1704,15 @@ dash.calc('plantel_totales', {
   };
   const abrirMarcar = () => {
     if (dash.data('no_disponibles_actual').status !== 'ok') return;
-    cerrarFormPrestamo();
-    cerrarDevolver();
-    cerrarDisponible();
-    cerrarFormCam();
-    cerrarConfirmarCam();
+    soloEste('cam-marcar');
     T.noDispPend = new Set(datos('no_disponibles_actual').map((r) => claveCam(r.modelo, r.numero)));
     T.marcando = true;
     if (panelMarcar) avisar(panelMarcar, null);
     pintarMarcando();
   };
   const cerrarMarcar = () => { T.marcando = false; T.noDispPend = new Set(); if (panelMarcar) avisar(panelMarcar, null); pintarMarcando(); };
+  registrarCuadro('cam-disponible', () => Boolean(panelDisp && !panelDisp.hidden), cerrarDisponible);
+  registrarCuadro('cam-marcar', () => T.marcando, cerrarMarcar);
   const alternarMarca = (chip) => {
     if (chip.dataset.prestamo) { if (panelMarcar) avisar(panelMarcar, 'prestada'); return; }
     if (panelMarcar) avisar(panelMarcar, null);
@@ -1756,6 +1784,7 @@ dash.calc('plantel_totales', {
   const abrirFormPedido = (clave) => {
     const r = datos('pedidos_actual').find((x) => x.clave === clave);
     if (!formPedido || !r || !puedeEditar()) return;
+    soloEste('pedido');
     formPedido.reset();
     avisar(formPedido, null);
     T.pedidoSel = clave;
@@ -1775,6 +1804,7 @@ dash.calc('plantel_totales', {
     formPedido.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     campo('numero').focus({ preventScroll: true });
   };
+  registrarCuadro('pedido', () => Boolean(formPedido && !formPedido.hidden), cerrarFormPedido);
   const seccionPedido = document.getElementById('pedido-camisetas');
   if (seccionPedido) {
     seccionPedido.addEventListener('click', (e) => {
@@ -1878,6 +1908,7 @@ dash.calc('plantel_totales', {
   const formLiga = document.getElementById('form-liga');
   const abrirFormLiga = (liga) => {
     if (!formLiga) return;
+    soloEste('liga-form');
     const campo = (n) => formLiga.querySelector('[name="' + n + '"]');
     formLiga.reset();
     avisar(formLiga, null);
@@ -1914,6 +1945,7 @@ dash.calc('plantel_totales', {
     if (n) n.focus({ preventScroll: true });
   };
   const cerrarFormLiga = () => { if (!formLiga) return; formLiga.hidden = true; formLiga.reset(); sincronizarModoInsc(); T.formLiga = null; avisar(formLiga, null); };
+  registrarCuadro('liga-form', () => Boolean(formLiga && !formLiga.hidden), cerrarFormLiga);
   function sincronizarModoInsc() {
     if (!formLiga) return;
     const modo = (formLiga.querySelector('[name="insc_modo"]:checked') || {}).value === 'total' ? 'total' : 'jugador';
@@ -2034,6 +2066,7 @@ dash.calc('plantel_totales', {
   };
   const abrirEditor = (sel) => {
     if (!editor) return;
+    soloEste('liga-pagos');
     T.sel = sel;
     const r = filaActual(sel);
     const esMes = sel.tipo !== 'insc';
@@ -2066,12 +2099,19 @@ dash.calc('plantel_totales', {
     if (T.sel && !T.editandoLigas.has(T.sel.liga)) cerrarEditor(); else redibujar();
   };
   const editarPagosDe = (key, on) => {
-    if (on) { T.editandoLigas.add(key); T.ligasAbiertas.add(key); } else T.editandoLigas.delete(key);
+    if (on) { soloEste('liga-pagos'); T.editandoLigas.add(key); T.ligasAbiertas.add(key); } else T.editandoLigas.delete(key);
     syncEdicion();
   };
+  registrarCuadro('liga-pagos', () => T.editandoLigas.size > 0 || Boolean(T.sel), () => {
+    T.editandoLigas.clear();
+    syncEdicion();
+    if (T.sel) cerrarEditor();
+  });
+  const confirmacionesLiga = () => [...document.querySelectorAll('.tb-liga [data-slot="confirmar"]')].filter((c) => !c.hidden);
+  registrarCuadro('liga-borrar', () => confirmacionesLiga().length > 0, () => { for (const c of confirmacionesLiga()) c.hidden = true; });
   for (const t of document.querySelectorAll('[data-editar]')) t.addEventListener('click', () => {
     if (T.editandoLigas.size > 0) T.editandoLigas.clear();
-    else for (const l of datos('ligas_todas')) { T.editandoLigas.add(l.key); T.ligasAbiertas.add(l.key); }
+    else { soloEste('liga-pagos'); for (const l of datos('ligas_todas')) { T.editandoLigas.add(l.key); T.ligasAbiertas.add(l.key); } }
     syncEdicion();
   });
 
@@ -2100,7 +2140,13 @@ dash.calc('plantel_totales', {
       if (accion === 'editar') { abrirFormLiga(liga); return; }
       if (accion === 'pagos') { editarPagosDe(liga.key, !T.editandoLigas.has(liga.key)); return; }
       if (liga.base) return;
-      if (accion === 'borrar') { if (confirmar) confirmar.hidden = false; if (error) error.hidden = true; return; }
+      if (accion === 'borrar') {
+        soloEste('liga-borrar');
+        for (const c of confirmacionesLiga()) c.hidden = true;
+        if (confirmar) confirmar.hidden = false;
+        if (error) error.hidden = true;
+        return;
+      }
       if (accion === 'no') { if (confirmar) confirmar.hidden = true; return; }
       if (accion === 'si') {
         b.disabled = true;
