@@ -641,20 +641,21 @@
           <h2>Camisetas del equipo prestadas</h2>
           <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-prestar-nueva>+ Prestar camiseta</button></div>
         </div>
-        <p class="tb-note">Disponibles ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. No disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla o marcarla como devuelta.</span></p>
+        <p class="tb-note">Disponibles ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. No disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla, marcarla como no disponible o marcarla como devuelta.</span></p>
       </div>
       <form class="tb-form tb-liga-form tb-solo-editor" id="form-prestamo" hidden novalidate data-perm="camisetas">
-        <h3>Prestar camiseta del equipo</h3>
+        <h3>Prestar o marcar no disponible</h3>
         <div class="tb-form-grid">
           <label class="tb-field" for="prestamo-camiseta">Camiseta<select id="prestamo-camiseta" name="camiseta" class="dash-select" data-draw="select-camisetas-libres" data-source="camisetas_actual"></select></label>
           <label class="tb-field" for="prestamo-a">Prestada a<input id="prestamo-a" name="a" type="text" maxlength="40" autocomplete="off" list="lista-jugadores"></label>
           <label class="tb-field" for="prestamo-desde">Desde<input id="prestamo-desde" name="desde" type="date"></label>
         </div>
         <datalist id="lista-jugadores" data-draw="lista-jugadores" data-source="plantel"></datalist>
-        <p class="tb-msg-error" data-msg="camiseta" hidden>Elige la camiseta que se presta.</p>
+        <p class="tb-msg-error" data-msg="camiseta" hidden>Elige la camiseta.</p>
         <p class="tb-msg-error" data-msg="a" hidden>Escribe a quién se le presta.</p>
-        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para prestar camisetas hay que tener permiso para editar la página.</p>
-        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar préstamo</button><button type="button" class="tb-btn" data-form-prestamo="cancelar">Cancelar</button></div>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar préstamo</button><button type="button" class="tb-btn" data-form-prestamo="no-disponible">Marcar no disponible</button><button type="button" class="tb-btn" data-form-prestamo="cancelar">Cancelar</button></div>
+        <p class="tb-editor-sub">«Marcar no disponible» es para una camiseta perdida, rota o en lavado: no se presta y no cuenta como disponible hasta que la vuelvas a marcar.</p>
       </form>
       <div class="tb-scroll">
         <table class="tb-table" data-source="prestamos_actual" data-row-key="id">
@@ -1641,6 +1642,27 @@ dash.calc('plantel_totales', {
   if (formPrest) {
     const cancelar = formPrest.querySelector('[data-form-prestamo="cancelar"]');
     if (cancelar) cancelar.addEventListener('click', cerrarFormPrestamo);
+    const noDisponible = formPrest.querySelector('[data-form-prestamo="no-disponible"]');
+    if (noDisponible) {
+      noDisponible.addEventListener('click', async () => {
+        const camiseta = String(formPrest.querySelector('[name="camiseta"]').value || '');
+        if (!camiseta) { avisar(formPrest, 'camiseta'); return; }
+        const corte = camiseta.lastIndexOf('|');
+        const modelo = camiseta.slice(0, corte);
+        const numero = Number(camiseta.slice(corte + 1));
+        noDisponible.disabled = true;
+        avisar(formPrest, null);
+        try {
+          const db = await baseDatos();
+          await db.doc('data/camisetas/no-disponibles/' + (T.slug(modelo) || 'modelo') + '-' + numero).set({ modelo, numero, desde: T.hoy(), registrado: new Date().toISOString() });
+          cerrarFormPrestamo();
+        } catch {
+          avisar(formPrest, 'error');
+        } finally {
+          noDisponible.disabled = false;
+        }
+      });
+    }
     formPrest.addEventListener('change', (e) => { if (e.target && e.target.name === 'camiseta') T.prestamoSel = e.target.value; });
     formPrest.addEventListener('submit', async (e) => {
       e.preventDefault();
