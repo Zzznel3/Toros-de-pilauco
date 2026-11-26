@@ -1,6 +1,6 @@
 [
   {"jugador": "Seba", "dorsal": "RODRIGUEZ", "talla": "XL", "numero": 32, "tipo": "Blanca", "valor": 55980, "estado": "Pagado"},
-  {"jugador": "Pablo L", "nombre_planilla": "Pablo", "dorsal": "LOPEZ", "talla": "XL", "numero": 31, "tipo": "Blanca y negra", "valor": 55980, "estado": "Pagado"},
+  {"jugador": "Pablo L", "nombre_planilla": "Pablo", "dorsal": "LOPEZ", "talla": "XL", "numero": 85, "tipo": "Blanca y negra", "valor": 55980, "estado": "Pagado"},
   {"jugador": "Vicho", "dorsal": "EL VICHO", "talla": "L", "numero": 16, "tipo": "Blanca y negra", "valor": 55980, "estado": "Pagado"},
   {"jugador": "Cesar", "dorsal": "CONODIOS", "talla": "L", "numero": 55, "tipo": "Old", "valor": 23990, "estado": "Pagado"},
   {"jugador": "Sin nombre", "dorsal": null, "talla": "L", "numero": 3, "tipo": "Blanca", "valor": 18990, "estado": "Pagado"},
