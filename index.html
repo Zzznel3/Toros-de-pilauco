@@ -272,7 +272,16 @@
 .tb-punto.is-warn { background: var(--color-warn); }
 .tb-punto.is-bad { background: var(--color-bad); }
 .tb.puede-camisetas .tb-equipo.marcando .tb-equipo-card { border-color: color-mix(in srgb, var(--color-fg) 30%, var(--color-border-line)); }
-.tb.puede-camisetas .tb-equipo.marcando .tb-quitar-mini, .tb.puede-camisetas .tb-equipo.marcando .tb-jersey-add { display: none !important; }
+.tb.puede-camisetas .tb-equipo.marcando .tb-quitar-mini, .tb.puede-camisetas .tb-equipo.marcando .tb-editar-mini, .tb.puede-camisetas .tb-equipo.marcando .tb-jersey-add { display: none !important; }
+/* Editar camisetas (lápiz abajo a la derecha; la X de quitar queda arriba) y filas del pedido */
+.tb-editar-mini { position: absolute; bottom: -7px; right: -7px; width: 18px; height: 18px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--color-fg); color: var(--color-bg); box-shadow: 0 0 0 2px var(--color-panel); opacity: 0; z-index: 1; cursor: pointer; }
+.tb-jersey:hover .tb-editar-mini, .tb-jersey:focus-within .tb-editar-mini { opacity: 1; }
+@media (hover: none) { .tb-editar-mini { opacity: 1; } }
+.tb.sin-permiso .tb-editar-mini { display: none !important; }
+.tb.puede-camisetas .tb-jersey[data-camisa-con-nombre] { cursor: pointer; }
+.tb.puede-camisetas .tb-jersey[data-camisa-con-nombre]:hover { outline: 2px solid color-mix(in srgb, var(--color-fg) 35%, transparent); outline-offset: 1px; }
+.tb-num-cell.is-editado::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--color-warn); margin-inline-start: 6px; vertical-align: middle; }
+.tb-table tr.is-sel td { background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
 .tb.puede-camisetas .tb-equipo.marcando .tb-jersey.is-prestada { cursor: not-allowed; }
 .tb.puede-camisetas .tb-equipo.marcando .tb-jersey.is-no-disp { opacity: .55; }
 .tb.puede-camisetas .tb-equipo.marcando .tb-jersey[aria-pressed="true"]::after { content: "✓"; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--color-ok); color: #0b0b0b; font-size: 11px; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--color-panel); }
@@ -587,7 +596,7 @@
         <p class="tb-leyenda-cam"><span><i class="tb-punto is-warn"></i>prestada</span><span><i class="tb-punto is-bad"></i>no disponible (perdida, rota, en lavado…)</span></p>
       </div>
       <form class="tb-form tb-liga-form tb-solo-editor" id="form-camiseta" hidden novalidate data-perm="camisetas">
-        <h3>Nueva camiseta</h3>
+        <h3 data-titulo-camisa>Nueva camiseta</h3>
         <div class="tb-form-grid">
           <label class="tb-field" for="camiseta-modelo">Modelo<select id="camiseta-modelo" name="modelo" class="dash-select"><option value="Old">Old</option><option value="Blanca">Blanca</option><option value="Negra">Negra</option></select></label>
           <label class="tb-field" for="camiseta-numero">Número<input id="camiseta-numero" name="numero" type="number" min="0" max="99" step="1" inputmode="numeric"></label>
@@ -595,8 +604,9 @@
         </div>
         <p class="tb-msg-error" data-msg="numero" hidden>Escribe un número entre 0 y 99.</p>
         <p class="tb-msg-error" data-msg="repetida" hidden>Ya hay una camiseta de ese modelo con ese número.</p>
-        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Para agregar camisetas hay que tener permiso para editar la página.</p>
-        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar camiseta</button><button type="button" class="tb-btn" data-form-camisa="cancelar">Cancelar</button></div>
+        <p class="tb-msg-error" data-msg="prestada" hidden>Esa camiseta está prestada. Márcala como devuelta antes de editarla.</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary" data-guardar-camisa>Guardar camiseta</button><button type="button" class="tb-btn" data-form-camisa="cancelar">Cancelar</button></div>
       </form>
       <div class="tb-equipo">
         <article class="tb-equipo-card" id="equipo-old">
@@ -662,7 +672,7 @@
     <div class="tb-sec" id="numeros">
       <div class="tb-sec-head">
         <h2>Camisetas con nombre</h2>
-        <p class="tb-note">Camisetas personales, con el nombre estampado. Sirve para ver qué números ya están tomados.</p>
+        <p class="tb-note">Camisetas personales, con el nombre estampado. Sirve para ver qué números ya están tomados.<span class="tb-solo-editor" data-perm="camisetas"> Toca una camiseta (o su lápiz) para editarla; la X la quita.</span></p>
       </div>
       <div class="tb-nums">
         <div class="tb-num-group" id="numeros-old"><h3><span class="tb-sw is-old"></span>Old <span class="tb-num-cuenta" data-draw="valor" data-source="camisetas_por_modelo" data-field="con_nombre" data-where="modelo=Old">—</span></h3><ul class="tb-num-list" data-draw="numeros" data-modelo="Old" data-tipo="nombre" data-source="camisetas_actual"></ul></div>
@@ -684,11 +694,27 @@
     <div class="tb-sec" id="pedido-camisetas">
       <div class="tb-sec-head">
         <h2>Pedido de camisetas 2026</h2>
-        <p class="tb-note">Número, nombre en la espalda, talla y modelo de cada camiseta pedida este año.</p>
+        <p class="tb-note">Número, nombre en la espalda, talla y modelo de cada camiseta pedida este año.<span class="tb-solo-editor" data-perm="camisetas"> Toca «Editar» en una fila para cambiarla; el punto junto al número indica que se cambió en la página.</span></p>
       </div>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-pedido" hidden novalidate data-perm="camisetas">
+        <h3 data-draw="pedido-sel">Editar pedido</h3>
+        <div class="tb-form-grid">
+          <label class="tb-field" for="pedido-numero">Número<input id="pedido-numero" name="numero" type="number" min="0" max="99" step="1" inputmode="numeric"></label>
+          <label class="tb-field" for="pedido-jugador">Para (vacío = del equipo)<input id="pedido-jugador" name="jugador" type="text" maxlength="40" autocomplete="off" list="lista-jugadores"></label>
+          <label class="tb-field" for="pedido-dorsal">En la espalda (vacío = sin nombre)<input id="pedido-dorsal" name="dorsal" type="text" maxlength="20" autocomplete="off"></label>
+          <label class="tb-field" for="pedido-talla">Talla<select id="pedido-talla" name="talla" class="dash-select"><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></label>
+          <label class="tb-field" for="pedido-tipo">Modelo<select id="pedido-tipo" name="tipo" class="dash-select"><option>Blanca</option><option>Negra</option><option>Blanca y negra</option><option>Old</option></select></label>
+          <label class="tb-field" for="pedido-valor">Valor ($)<input id="pedido-valor" name="valor" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label class="tb-field" for="pedido-estado">Estado<select id="pedido-estado" name="estado" class="dash-select"><option value="Pagado">Pagado</option><option value="Pendiente">Pendiente</option></select></label>
+        </div>
+        <p class="tb-msg-error" data-msg="numero" hidden>Escribe un número entre 0 y 99.</p>
+        <p class="tb-msg-error" data-msg="valor" hidden>Escribe un valor en pesos (0 o más).</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar cambios</button><button type="button" class="tb-btn" data-form-pedido="planilla" hidden>Volver a lo de la planilla</button><button type="button" class="tb-btn" data-form-pedido="cancelar">Cancelar</button></div>
+      </form>
       <div class="tb-scroll">
-        <table class="tb-table" data-source="camisetas_pedidos" data-row-key="numero">
-          <thead><tr><th scope="col" data-field="numero">Nº</th><th scope="col" data-field="jugador">Para</th><th scope="col" data-field="dorsal">En la espalda</th><th scope="col" data-field="talla">Talla</th><th scope="col" data-field="tipo">Modelo</th><th scope="col" class="num" data-field="valor">Valor</th><th scope="col" data-field="estado">Estado</th></tr></thead>
+        <table class="tb-table" data-source="pedidos_actual" data-row-key="clave">
+          <thead><tr><th scope="col" data-field="numero">Nº</th><th scope="col" data-field="jugador">Para</th><th scope="col" data-field="dorsal">En la espalda</th><th scope="col" data-field="talla">Talla</th><th scope="col" data-field="tipo">Modelo</th><th scope="col" class="num" data-field="valor">Valor</th><th scope="col" data-field="estado">Estado</th><th scope="col" class="tb-solo-editor" data-perm="camisetas"><span class="tb-sr">Acción</span></th></tr></thead>
           <tbody data-draw="tabla-pedidos"></tbody>
         </table>
       </div>
@@ -788,7 +814,7 @@ window.toros = (() => {
   const fechaLocal = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null; };
   const fechaCorta = (iso) => { const d = fechaLocal(iso); return d ? d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; };
   const diasDesde = (iso) => { const d = fechaLocal(iso); if (!d) return null; const h = fechaLocal(hoy()); return Math.round((h - d) / 86400000); };
-  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null, marcando: false, noDispPend: new Set(), noDispSel: null };
+  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null, marcando: false, noDispPend: new Set(), noDispSel: null, pedidoSel: null, camisaEdit: null };
 })();
 </script>
 
@@ -975,7 +1001,7 @@ dash.calc('arbitraje_meses', {
 });
 
 dash.calc('resumen', {
-  inputs: ['arbitraje_meses', 'inscripciones_actual', 'camisetas_pedidos', 'ligas_todas'],
+  inputs: ['arbitraje_meses', 'inscripciones_actual', 'pedidos_actual', 'ligas_todas'],
   title: 'Resumen por liga',
   description: 'Recaudado y pendiente de cada liga (arbitraje más inscripción), de las camisetas y del equipo completo.',
   fn: (meses, inscripciones, camisetas, ligas) => {
@@ -996,7 +1022,7 @@ dash.calc('resumen', {
 });
 
 dash.calc('deudores', {
-  inputs: ['arbitraje_actual', 'ligas_todas', 'inscripciones_actual', 'camisetas_pedidos'],
+  inputs: ['arbitraje_actual', 'ligas_todas', 'inscripciones_actual', 'pedidos_actual'],
   title: 'Quién debe',
   description: 'Lo que debe cada jugador: cuotas de arbitraje marcadas «Debe» (a la cuota de su liga), saldos por pagar, inscripciones pendientes y camisetas no pagadas.',
   fn: (arbitraje, ligas, inscripciones, camisetas) => {
@@ -1030,7 +1056,7 @@ dash.calc('deudores', {
 });
 
 dash.calc('plantel', {
-  inputs: ['miembros', 'arbitraje_actual', 'inscripciones_actual', 'camisetas_actual', 'camisetas_pedidos', 'deudores', 'jugadores_extra', 'jugadores_quitados', 'ligas_todas'],
+  inputs: ['miembros', 'arbitraje_actual', 'inscripciones_actual', 'camisetas_actual', 'pedidos_actual', 'deudores', 'jugadores_extra', 'jugadores_quitados', 'ligas_todas'],
   title: 'Plantel',
   description: 'Jugadores de todas las ligas más los agregados a mano, con sus ligas, número de camiseta (cuando su nombre figura en la hoja de camisetas o se anotó al agregarlo) y lo que debe. Deja fuera a los jugadores quitados.',
   fn: (miembros, arbitraje, inscripciones, numeros, pedidos, deudores, extraTodos, quitados, ligas) => {
@@ -1121,6 +1147,30 @@ dash.calc('prestamos_actual', {
       filas.push({ id: p.id, modelo: c.modelo, numero: c.numero, camiseta: c.modelo + ' n.º ' + c.numero, a: String(p.a == null ? '' : p.a).trim(), desde: p.desde || null });
     }
     return filas.sort((a, b) => String(a.desde || '').localeCompare(String(b.desde || '')) || a.camiseta.localeCompare(b.camiseta, 'es'));
+  },
+});
+
+dash.calc('pedidos_actual', {
+  inputs: ['camisetas_pedidos', 'pedidos_cambios'],
+  title: 'Pedido de camisetas',
+  description: 'Las camisetas pedidas este año según la planilla, con los cambios hechos desde la página (número, para quién, espalda, talla, modelo, valor y estado).',
+  fn: (base, cambios) => {
+    const slug = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const porClave = new Map((cambios || []).filter((c) => c.clave).map((c) => [String(c.clave), c]));
+    const vistas = new Map();
+    return base.map((r) => {
+      let clave = (slug(r.jugador || 'sin nombre') || 'pedido') + '-' + r.numero;
+      const n = (vistas.get(clave) || 0) + 1;
+      vistas.set(clave, n);
+      if (n > 1) clave += '-' + n;
+      const c = porClave.get(clave);
+      if (!c) return { ...r, clave, editado: false, cambio_id: null };
+      return {
+        ...r, clave, editado: true, cambio_id: c.id,
+        numero: Number(c.numero), jugador: String(c.jugador || '').trim() || 'Sin nombre', dorsal: String(c.dorsal || '').trim() || null,
+        talla: String(c.talla || ''), tipo: String(c.tipo || ''), valor: Number(c.valor) || 0, estado: c.estado === 'Pagado' ? 'Pagado' : 'Pendiente',
+      };
+    });
   },
 });
 
@@ -1382,10 +1432,18 @@ dash.calc('plantel_totales', {
   const RUTA_CAM_QUITADAS = 'data/camisetas/quitadas';
   const formCam = document.getElementById('form-camiseta');
   const confirmarCam = document.getElementById('confirmar-camiseta');
+  const textosFormCam = (titulo, boton) => {
+    const h = formCam.querySelector('[data-titulo-camisa]');
+    const b = formCam.querySelector('[data-guardar-camisa]');
+    if (h) h.textContent = titulo;
+    if (b) b.textContent = boton;
+  };
   const abrirFormCam = (modelo, conNombre) => {
     if (!formCam) return;
     formCam.reset();
     avisar(formCam, null);
+    T.camisaEdit = null;
+    textosFormCam('Nueva camiseta', 'Guardar camiseta');
     const sel = formCam.querySelector('[name="modelo"]');
     if (sel && modelo) sel.value = modelo;
     formCam.hidden = false;
@@ -1393,7 +1451,42 @@ dash.calc('plantel_totales', {
     const foco = formCam.querySelector(conNombre ? '[name="nombre"]' : '[name="numero"]');
     if (foco) foco.focus({ preventScroll: true });
   };
-  const cerrarFormCam = () => { if (!formCam) return; formCam.hidden = true; formCam.reset(); avisar(formCam, null); };
+  // Editar una camiseta: c = { modelo, numero, nombre, id } (id solo si se agregó desde la página)
+  const abrirEditarCam = (c) => {
+    if (!formCam) return;
+    abrirFormCam(c.modelo, false);
+    T.camisaEdit = c;
+    const sel = formCam.querySelector('[name="modelo"]');
+    if (sel && ![...sel.options].some((o) => o.value === c.modelo)) sel.add(new Option(c.modelo, c.modelo));
+    if (sel) sel.value = c.modelo;
+    formCam.querySelector('[name="numero"]').value = String(c.numero);
+    formCam.querySelector('[name="nombre"]').value = c.nombre || '';
+    textosFormCam('Editar camiseta ' + c.modelo + ' n.º ' + c.numero + ' (' + (c.nombre || 'del equipo') + ')', 'Guardar cambios');
+    formCam.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+  const camisaDe = (nodo) => ({ modelo: nodo.dataset.modelo, numero: Number(nodo.dataset.numero), nombre: nodo.dataset.nombre || null, id: nodo.dataset.id || null });
+  const cerrarFormCam = () => { if (!formCam) return; formCam.hidden = true; formCam.reset(); avisar(formCam, null); T.camisaEdit = null; };
+  const guardarEdicionCam = async (edit, modelo, numero, nombre) => {
+    const kViejo = norm(edit.modelo) + '|' + Number(edit.numero);
+    const kNuevo = norm(modelo) + '|' + numero;
+    const marca = datos('no_disponibles_actual').find((m) => norm(m.modelo) + '|' + Number(m.numero) === kViejo) || null;
+    const antes = { modelo: edit.modelo, numero: Number(edit.numero), nombre: edit.nombre || null };
+    const ahora = new Date().toISOString();
+    const db = await baseDatos();
+    if (edit.id) {
+      const doc = datos('camisetas_extra').find((x) => x.id === edit.id) || {};
+      await db.doc(RUTA_CAM_EXTRA + '/' + edit.id).set({ modelo, numero, nombre: nombre || null, agregado: doc.agregado || ahora, editado: ahora, antes });
+    } else {
+      // Camiseta de la planilla: se guarda la versión editada y la original queda reemplazada (no aparece en «Camisetas quitadas»).
+      await db.collection(RUTA_CAM_EXTRA).add({ modelo, numero, nombre: nombre || null, agregado: ahora, antes });
+      await db.doc(RUTA_CAM_QUITADAS + '/' + (T.slug(edit.modelo) || 'modelo') + '-' + edit.numero).set({ modelo: edit.modelo, numero: Number(edit.numero), nombre: edit.nombre || null, quitada: ahora, editada: true });
+    }
+    // Si estaba marcada como no disponible, la marca se va con la camiseta.
+    if (marca && (kNuevo !== kViejo || nombre)) {
+      await db.doc('data/camisetas/no-disponibles/' + marca.id).delete();
+      if (!nombre) await db.doc('data/camisetas/no-disponibles/' + (T.slug(modelo) || 'modelo') + '-' + numero).set({ modelo, numero, desde: marca.desde || T.hoy(), registrado: ahora });
+    }
+  };
   const cerrarConfirmarCam = () => { T.camisaSel = null; if (confirmarCam) { confirmarCam.hidden = true; avisar(confirmarCam, null); } dash.draw('camiseta-sel'); };
   for (const b of document.querySelectorAll('[data-camisa-nueva]')) b.addEventListener('click', () => abrirFormCam(null, false));
   if (formCam) {
@@ -1407,13 +1500,23 @@ dash.calc('plantel_totales', {
       const nombre = String(campo('nombre').value || '').trim().replace(/\s+/g, ' ');
       const numero = Number(numeroTxt);
       if (numeroTxt === '' || !Number.isInteger(numero) || numero < 0 || numero > 99) { avisar(formCam, 'numero'); return; }
-      if (datos('camisetas_actual').some((c) => norm(c.modelo) === norm(modelo) && Number(c.numero) === numero)) { avisar(formCam, 'repetida'); return; }
+      const edit = T.camisaEdit;
+      const esLaMisma = (c) => Boolean(edit) && norm(c.modelo) === norm(edit.modelo) && Number(c.numero) === Number(edit.numero);
+      if (datos('camisetas_actual').some((c) => norm(c.modelo) === norm(modelo) && Number(c.numero) === numero && !esLaMisma(c))) { avisar(formCam, 'repetida'); return; }
+      if (edit) {
+        const sinCambios = norm(edit.modelo) === norm(modelo) && Number(edit.numero) === numero && (edit.nombre || '') === nombre;
+        if (sinCambios) { cerrarFormCam(); return; }
+        if (datos('prestamos_actual').some((p) => norm(p.modelo) === norm(edit.modelo) && Number(p.numero) === Number(edit.numero))) { avisar(formCam, 'prestada'); return; }
+      }
       const enviar = formCam.querySelector('[type="submit"]');
       if (enviar) enviar.disabled = true;
       avisar(formCam, null);
       try {
-        const db = await baseDatos();
-        await db.collection(RUTA_CAM_EXTRA).add({ modelo, numero, nombre: nombre || null, agregado: new Date().toISOString() });
+        if (edit) await guardarEdicionCam(edit, modelo, numero, nombre);
+        else {
+          const db = await baseDatos();
+          await db.collection(RUTA_CAM_EXTRA).add({ modelo, numero, nombre: nombre || null, agregado: new Date().toISOString() });
+        }
         cerrarFormCam();
       } catch {
         avisar(formCam, 'error');
@@ -1427,6 +1530,8 @@ dash.calc('plantel_totales', {
     panelCamisetas.addEventListener('click', async (e) => {
       const agregar = e.target.closest('[data-camisa-agregar]');
       if (agregar) { abrirFormCam(agregar.dataset.modelo, agregar.dataset.tipo === 'nombre'); return; }
+      const editar = e.target.closest('[data-camisa-editar]');
+      if (editar) { abrirEditarCam(camisaDe(editar)); return; }
       const quitar = e.target.closest('[data-camisa-quitar]');
       if (quitar) {
         T.camisaSel = { modelo: quitar.dataset.modelo, numero: Number(quitar.dataset.numero), nombre: quitar.dataset.nombre || null, id: quitar.dataset.id || null };
@@ -1633,6 +1738,101 @@ dash.calc('plantel_totales', {
     });
   }
 
+  // Pedido de camisetas: editar una fila (se guarda como cambio sobre la planilla)
+  const RUTA_PEDIDOS = 'data/camisetas/pedido-cambios';
+  const formPedido = document.getElementById('form-pedido');
+  const CAMPOS_PEDIDO = [['numero', 'número'], ['jugador', 'para'], ['dorsal', 'espalda'], ['talla', 'talla'], ['tipo', 'modelo'], ['valor', 'valor'], ['estado', 'estado']];
+  const textoPedido = (campo, v) => (campo === 'jugador' ? (v && v !== 'Sin nombre' ? v : 'del equipo') : campo === 'dorsal' ? (v || 'sin nombre') : campo === 'valor' ? T.clp(v) : String(v == null ? '' : v));
+  const elegir = (sel, valor) => { if (valor && ![...sel.options].some((o) => o.value === valor)) sel.add(new Option(valor, valor)); sel.value = valor; };
+  const cerrarFormPedido = () => {
+    if (!formPedido) return;
+    formPedido.hidden = true;
+    formPedido.reset();
+    avisar(formPedido, null);
+    T.pedidoSel = null;
+    dash.draw('tabla-pedidos');
+    dash.draw('pedido-sel');
+  };
+  const abrirFormPedido = (clave) => {
+    const r = datos('pedidos_actual').find((x) => x.clave === clave);
+    if (!formPedido || !r || !puedeEditar()) return;
+    formPedido.reset();
+    avisar(formPedido, null);
+    T.pedidoSel = clave;
+    const campo = (n) => formPedido.querySelector('[name="' + n + '"]');
+    campo('numero').value = String(r.numero);
+    campo('jugador').value = r.jugador === 'Sin nombre' ? '' : r.jugador;
+    campo('dorsal').value = r.dorsal || '';
+    elegir(campo('talla'), String(r.talla || 'L'));
+    elegir(campo('tipo'), String(r.tipo || 'Blanca'));
+    campo('valor').value = String(Number(r.valor) || 0);
+    campo('estado').value = r.estado === 'Pagado' ? 'Pagado' : 'Pendiente';
+    const planilla = formPedido.querySelector('[data-form-pedido="planilla"]');
+    if (planilla) planilla.hidden = !r.editado;
+    formPedido.hidden = false;
+    dash.draw('tabla-pedidos');
+    dash.draw('pedido-sel');
+    formPedido.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    campo('numero').focus({ preventScroll: true });
+  };
+  const seccionPedido = document.getElementById('pedido-camisetas');
+  if (seccionPedido) {
+    seccionPedido.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-pedido-editar]');
+      if (b) abrirFormPedido(b.dataset.pedidoEditar);
+    });
+  }
+  if (formPedido) {
+    formPedido.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-form-pedido]');
+      if (!b) return;
+      if (b.dataset.formPedido === 'cancelar') { cerrarFormPedido(); return; }
+      const r = datos('pedidos_actual').find((x) => x.clave === T.pedidoSel);
+      if (!r || !r.editado) { cerrarFormPedido(); return; }
+      b.disabled = true;
+      try { const db = await baseDatos(); await db.doc(RUTA_PEDIDOS + '/' + (r.cambio_id || r.clave)).delete(); cerrarFormPedido(); }
+      catch { avisar(formPedido, 'error'); }
+      finally { b.disabled = false; }
+    });
+    formPedido.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const r = datos('pedidos_actual').find((x) => x.clave === T.pedidoSel);
+      if (!r) { cerrarFormPedido(); return; }
+      const campo = (n) => formPedido.querySelector('[name="' + n + '"]');
+      const numeroTxt = String(campo('numero').value || '').trim();
+      const numero = Number(numeroTxt);
+      if (numeroTxt === '' || !Number.isInteger(numero) || numero < 0 || numero > 99) { avisar(formPedido, 'numero'); return; }
+      const valorTxt = String(campo('valor').value || '').trim();
+      const valor = Number(valorTxt);
+      if (valorTxt === '' || !Number.isFinite(valor) || valor < 0) { avisar(formPedido, 'valor'); return; }
+      const nuevo = {
+        numero,
+        jugador: String(campo('jugador').value || '').trim().replace(/\s+/g, ' ') || 'Sin nombre',
+        dorsal: String(campo('dorsal').value || '').trim().replace(/\s+/g, ' ') || null,
+        talla: String(campo('talla').value || ''),
+        tipo: String(campo('tipo').value || ''),
+        valor: Math.round(valor),
+        estado: campo('estado').value === 'Pagado' ? 'Pagado' : 'Pendiente',
+      };
+      const cambios = CAMPOS_PEDIDO
+        .filter(([k]) => String(r[k] == null ? '' : r[k]) !== String(nuevo[k] == null ? '' : nuevo[k]))
+        .map(([k, nombre]) => nombre + ' ' + textoPedido(k, r[k]) + ' → ' + textoPedido(k, nuevo[k]));
+      if (!cambios.length) { cerrarFormPedido(); return; }
+      const enviar = formPedido.querySelector('[type="submit"]');
+      if (enviar) enviar.disabled = true;
+      avisar(formPedido, null);
+      try {
+        const db = await baseDatos();
+        await db.doc(RUTA_PEDIDOS + '/' + r.clave).set({ clave: r.clave, ...nuevo, cambios: cambios.join(', '), editado: new Date().toISOString() });
+        cerrarFormPedido();
+      } catch {
+        avisar(formPedido, 'error');
+      } finally {
+        if (enviar) enviar.disabled = false;
+      }
+    });
+  }
+
   if (panelCamisetas) {
     const activarChip = (chip) => {
       if (!puedeEditar()) return;
@@ -1642,7 +1842,9 @@ dash.calc('plantel_totales', {
       else abrirFormPrestamo(chip.dataset.modelo + '|' + chip.dataset.numero);
     };
     panelCamisetas.addEventListener('click', async (e) => {
-      if (e.target.closest('[data-camisa-quitar]')) return;
+      if (e.target.closest('[data-camisa-quitar], [data-camisa-editar]')) return;
+      const conNombre = e.target.closest('[data-camisa-con-nombre]');
+      if (conNombre) { if (puedeEditar() && !T.marcando) abrirEditarCam(camisaDe(conNombre)); return; }
       const chip = e.target.closest('[data-camisa-chip]');
       if (chip) { activarChip(chip); return; }
       const dev = e.target.closest('[data-devolver-id]');
@@ -1668,7 +1870,7 @@ dash.calc('plantel_totales', {
   }
 
   dash.onData(() => {
-    const hay = datos('camisetas_quitadas').length > 0;
+    const hay = datos('camisetas_quitadas').some((q) => !q.editada);
     for (const caja of document.querySelectorAll('#camisetas-quitadas')) caja.hidden = !hay;
   });
 
@@ -2441,8 +2643,8 @@ dash.draw('editor-celda', (el) => {
 });
 
 dash.draw('tabla-pedidos', (tbody) => {
-  const s = dash.data('camisetas_pedidos');
-  if (s.status !== 'ok') { tbody.replaceChildren(T.estadoTabla(s, 7, 'No se pudo cargar el pedido de camisetas.')); return; }
+  const s = dash.data('pedidos_actual');
+  if (s.status !== 'ok') { tbody.replaceChildren(T.estadoTabla(s, 8, 'No se pudo cargar el pedido de camisetas.')); return; }
   const muestras = (tipo) => {
     const t = String(tipo || '').toLowerCase();
     const span = T.el('span', 'tb-modelo');
@@ -2452,20 +2654,31 @@ dash.draw('tabla-pedidos', (tbody) => {
   };
   tbody.replaceChildren(...s.data.map((r) => {
     const tr = T.el('tr');
-    tr.dataset.key = T.enc(r.numero);
+    tr.dataset.key = T.enc(r.clave);
+    if (T.pedidoSel === r.clave) tr.classList.add('is-sel');
     const tdTipo = T.el('td');
     tdTipo.append(muestras(r.tipo));
     const tdEstado = T.el('td');
     tdEstado.append(T.chipEstado(r.estado));
     const sinNombre = !r.dorsal;
+    const tdNum = T.el('td', 'tb-num-cell' + (r.editado ? ' is-editado' : ''), String(r.numero));
+    if (r.editado) tdNum.title = 'Cambiado en la página';
+    const tdAccion = T.el('td', 'num tb-solo-editor');
+    tdAccion.dataset.perm = 'camisetas';
+    const b = T.el('button', 'tb-btn', 'Editar');
+    b.type = 'button';
+    b.dataset.pedidoEditar = r.clave;
+    b.setAttribute('aria-label', 'Editar el pedido de la camiseta n.º ' + r.numero + ' (' + (r.jugador === 'Sin nombre' ? 'del equipo' : r.jugador) + ')');
+    tdAccion.append(b);
     tr.append(
-      T.el('td', 'tb-num-cell', String(r.numero)),
+      tdNum,
       T.el('td', r.jugador === 'Sin nombre' ? 'tb-muted' : null, r.jugador === 'Sin nombre' ? 'Del equipo' : r.jugador),
       T.el('td', sinNombre ? 'tb-muted' : 'tb-dorsal', sinNombre ? 'sin nombre' : r.dorsal),
       T.el('td', null, r.talla),
       tdTipo,
       T.el('td', 'num', T.clp(r.valor)),
       tdEstado,
+      tdAccion,
     );
     return tr;
   }));
@@ -2483,6 +2696,23 @@ const iconoX = (px) => {
   path.setAttribute('stroke', 'currentColor');
   path.setAttribute('stroke-width', '2.2');
   path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('fill', 'none');
+  svg.append(path);
+  return svg;
+};
+
+const iconoLapiz = (px) => {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 12 12');
+  svg.setAttribute('width', String(px));
+  svg.setAttribute('height', String(px));
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', 'M8 1.8l2.2 2.2L4.2 10H2V7.8z');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '1.6');
+  path.setAttribute('stroke-linejoin', 'round');
   path.setAttribute('fill', 'none');
   svg.append(path);
   return svg;
@@ -2526,7 +2756,25 @@ dash.draw('numeros', (ul) => {
       if (marcando && !prestamo) li.setAttribute('aria-pressed', String(!noDisp));
       li.tabIndex = 0;
       li.setAttribute('role', 'button');
+    } else {
+      li.dataset.camisaConNombre = '';
+      li.dataset.modelo = r.modelo;
+      li.dataset.numero = String(r.numero);
+      li.dataset.nombre = r.nombre;
+      if (r.agregada && r.id) li.dataset.id = r.id;
     }
+    const lapiz = T.el('button', 'tb-editar-mini');
+    lapiz.type = 'button';
+    lapiz.dataset.camisaEditar = '';
+    lapiz.dataset.perm = 'camisetas';
+    lapiz.dataset.modelo = r.modelo;
+    lapiz.dataset.numero = String(r.numero);
+    if (r.nombre) lapiz.dataset.nombre = r.nombre;
+    if (r.agregada && r.id) lapiz.dataset.id = r.id;
+    lapiz.setAttribute('aria-label', 'Editar camiseta ' + r.modelo + ' número ' + r.numero);
+    lapiz.title = 'Editar';
+    lapiz.append(iconoLapiz(9));
+    li.append(lapiz);
     const x = T.el('button', 'tb-quitar tb-quitar-mini');
     x.type = 'button';
     x.dataset.camisaQuitar = '';
@@ -2605,6 +2853,12 @@ dash.draw('prestamo-sel', (el) => {
   el.textContent = 'La ' + p.camiseta + ' está prestada a ' + (p.a || 'alguien') + ' desde el ' + T.fechaCorta(p.desde) + '. ¿Ya la devolvió?';
 });
 
+dash.draw('pedido-sel', (el) => {
+  const s = dash.data('pedidos_actual');
+  const r = T.pedidoSel && s.status === 'ok' ? s.data.find((x) => x.clave === T.pedidoSel) : null;
+  el.textContent = r ? 'Editar pedido: camiseta n.º ' + r.numero + ' (' + (r.jugador === 'Sin nombre' ? 'del equipo' : r.jugador) + ')' : 'Editar pedido';
+});
+
 dash.draw('marcar-resumen', (el) => {
   const s = dash.data('camisetas_actual');
   if (s.status !== 'ok' || !T.marcando) { el.textContent = '—'; return; }
@@ -2628,13 +2882,13 @@ dash.draw('no-disponible-sel', (el) => {
 dash.draw('camiseta-sel', (el) => {
   const c = T.camisaSel;
   if (!c) { el.textContent = '—'; return; }
-  el.textContent = '¿Quitar la camiseta ' + c.modelo + ' n.º ' + c.numero + ' (' + (c.nombre ? 'de ' + c.nombre : 'del equipo') + ')?' + (c.id ? ' Se agregó a mano, así que se borra.' : ' Queda en «Camisetas quitadas» por si quieres restaurarla.');
+  el.textContent = '¿Quitar la camiseta ' + c.modelo + ' n.º ' + c.numero + ' (' + (c.nombre ? 'de ' + c.nombre : 'del equipo') + ')?' + (c.id ? ' Se borra de la página.' : ' Queda en «Camisetas quitadas» por si quieres restaurarla.');
 });
 
 dash.draw('camisetas-quitadas', (ul) => {
   const s = dash.data('camisetas_quitadas');
   if (s.status !== 'ok' || !Array.isArray(s.data)) { ul.replaceChildren(); return; }
-  const filas = s.data.slice().sort((a, b) => String(a.modelo).localeCompare(String(b.modelo)) || Number(a.numero) - Number(b.numero));
+  const filas = s.data.filter((q) => !q.editada).sort((a, b) => String(a.modelo).localeCompare(String(b.modelo)) || Number(a.numero) - Number(b.numero));
   ul.replaceChildren(...filas.map((q) => {
     const li = T.el('li');
     const txt = T.el('span', null, String(q.modelo) + ' n.º ' + q.numero + (q.nombre ? ' (' + q.nombre + ')' : ' (del equipo)'));

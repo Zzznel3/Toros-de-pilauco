@@ -28,6 +28,7 @@
     camisetas_quitadas: 'camisetas_quitadas',
     camisetas_prestamos: 'camisetas_prestamos',
     camisetas_no_disponibles: 'camisetas_no_disponibles',
+    pedidos_cambios: 'camisetas_pedidos_cambios',
   };
   const RUTAS = {
     'data/plantel/extra': 'plantel_extra',
@@ -40,6 +41,7 @@
     'data/camisetas/quitadas': 'camisetas_quitadas',
     'data/camisetas/prestamos': 'camisetas_prestamos',
     'data/camisetas/no-disponibles': 'camisetas_no_disponibles',
+    'data/camisetas/pedido-cambios': 'camisetas_pedidos_cambios',
   };
   const PERMISOS = ['pagos', 'ligas', 'jugadores', 'camisetas'];
   const NOMBRE_PERMISO = { pagos: 'Pagos', ligas: 'Ligas', jugadores: 'Jugadores', camisetas: 'Camisetas' };
@@ -223,9 +225,16 @@
       case 'plantel_quitados':
         return (borra ? 'Restauró al jugador ' : 'Quitó al jugador ') + (d.jugador || '');
       case 'camisetas_extra':
+        if (!borra && d.antes) return 'Editó la camiseta ' + camiseta(d.antes) + ' (' + (d.antes.nombre || 'del equipo') + ') → ' + camiseta(d) + ' (' + (d.nombre || 'del equipo') + ')';
         return (borra ? 'Borró la camiseta ' : 'Agregó la camiseta ') + camiseta(d) + ' (' + (d.nombre || 'del equipo') + ')';
       case 'camisetas_quitadas':
+        if (!borra && d.editada) return 'La ' + camiseta(d) + ' de la planilla queda reemplazada por la versión editada';
         return (borra ? 'Restauró la camiseta ' : 'Quitó la camiseta ') + camiseta(d) + ' (' + (d.nombre || 'del equipo') + ')';
+      case 'camisetas_pedidos_cambios': {
+        const para = d.jugador && d.jugador !== 'Sin nombre' ? d.jugador : 'del equipo';
+        if (borra) return 'Volvió el pedido de camiseta n.º ' + d.numero + ' (' + para + ') a como está en la planilla';
+        return 'Editó el pedido de camiseta n.º ' + d.numero + ' (' + para + ')' + (d.cambios ? ': ' + d.cambios : '');
+      }
       case 'camisetas_prestamos':
         if (borra) return 'Marcó como devuelta la ' + camiseta(d) + (d.a ? ' (estaba con ' + d.a + ')' : '');
         return 'Prestó la ' + camiseta(d) + ' a ' + (d.a || 'alguien');
