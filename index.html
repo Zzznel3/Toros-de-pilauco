@@ -292,9 +292,13 @@
 .tb.puede-camisetas .tb-equipo.marcando .tb-equipo-card { border-color: color-mix(in srgb, var(--color-fg) 30%, var(--color-border-line)); }
 .tb.puede-camisetas .tb-equipo.marcando .tb-quitar-mini, .tb.puede-camisetas .tb-equipo.marcando .tb-editar-mini, .tb.puede-camisetas .tb-equipo.marcando .tb-jersey-add { display: none !important; }
 /* Editar camisetas (lápiz abajo a la derecha; la X de quitar queda arriba) y filas del pedido */
-.tb-editar-mini { position: absolute; bottom: -7px; right: -7px; width: 18px; height: 18px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--color-fg); color: var(--color-bg); box-shadow: 0 0 0 2px var(--color-panel); opacity: 0; z-index: 1; cursor: pointer; }
+.tb-editar-mini { position: absolute; bottom: -7px; left: -7px; width: 18px; height: 18px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--color-fg); color: var(--color-bg); box-shadow: 0 0 0 2px var(--color-panel); opacity: 0; z-index: 1; cursor: pointer; }
 .tb-jersey:hover .tb-editar-mini, .tb-jersey:focus-within .tb-editar-mini { opacity: 1; }
 @media (hover: none) { .tb-editar-mini { opacity: 1; } }
+/* En pantallas táctiles no se muestran la X ni el lápiz sobre cada camiseta (quedaban apretados):
+   se toca la camiseta y el cuadro que se abre trae «Editar» y «Quitar». Con mouse aparecen al pasar por encima. */
+@media (hover: none) { .tb-jersey .tb-quitar-mini, .tb-jersey .tb-editar-mini { display: none !important; } }
+.tb-mas-acciones { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding-top: var(--cds-gap-sm); border-top: 1px solid var(--color-border-line); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .tb.sin-permiso .tb-editar-mini { display: none !important; }
 .tb.puede-camisetas .tb-jersey[data-camisa-con-nombre] { cursor: pointer; }
 .tb.puede-camisetas .tb-jersey[data-camisa-con-nombre]:hover { outline: 2px solid color-mix(in srgb, var(--color-fg) 35%, transparent); outline-offset: 1px; }
@@ -689,6 +693,7 @@ button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
         <p class="tb-msg-error" data-msg="prestada" hidden>Esa camiseta está prestada. Márcala como devuelta antes de editarla.</p>
         <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
         <div class="tb-acciones"><button type="submit" class="tb-btn is-primary" data-guardar-camisa>Guardar camiseta</button><button type="button" class="tb-btn" data-form-camisa="cancelar">Cancelar</button></div>
+        <p class="tb-mas-acciones" data-acciones-editar hidden><button type="button" class="tb-link is-bad" data-accion-camisa="quitar">Quitar esta camiseta</button></p>
       </form>
       <div class="tb-equipo">
         <article class="tb-equipo-card" id="equipo-old">
@@ -715,6 +720,7 @@ button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
         <p class="tb-editor-titulo" data-draw="no-disponible-sel">—</p>
         <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
         <div class="tb-acciones"><button type="button" class="tb-btn is-primary" data-disponible="si">Sí, ya está disponible</button><button type="button" class="tb-btn" data-disponible="no">Cancelar</button></div>
+        <p class="tb-mas-acciones"><button type="button" class="tb-link" data-accion-camisa="editar">Editar esta camiseta</button><button type="button" class="tb-link is-bad" data-accion-camisa="quitar">Quitar esta camiseta</button></p>
       </div>
     </div>
     <div class="tb-sec" id="camisetas-prestadas">
@@ -723,7 +729,7 @@ button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
           <h2>Camisetas del equipo prestadas</h2>
           <div class="tb-sec-top-acciones tb-solo-editor" data-perm="camisetas"><button type="button" class="tb-btn" data-prestar-nueva>+ Prestar camiseta</button></div>
         </div>
-        <p class="tb-note">Disponibles ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. No disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla, marcarla como no disponible o marcarla como devuelta.</span></p>
+        <p class="tb-note">Disponibles ahora: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="disponibles" data-where="modelo=Todas">—</b> de <b data-draw="valor" data-source="camisetas_por_modelo" data-field="del_equipo" data-where="modelo=Todas">—</b>. Prestadas: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="prestadas" data-where="modelo=Todas">—</b>. No disponibles: <b data-draw="valor" data-source="camisetas_por_modelo" data-field="no_disponibles" data-where="modelo=Todas">—</b>. <span class="tb-solo-editor" data-perm="camisetas">Toca una camiseta del equipo para prestarla, marcarla como no disponible, marcarla como devuelta, editarla o quitarla.</span></p>
       </div>
       <form class="tb-form tb-liga-form tb-solo-editor" id="form-prestamo" hidden novalidate data-perm="camisetas">
         <h3>Prestar o marcar no disponible</h3>
@@ -737,6 +743,7 @@ button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
         <p class="tb-msg-error" data-msg="a" hidden>Escribe a quién se le presta.</p>
         <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
         <div class="tb-acciones"><button type="submit" class="tb-btn is-primary">Guardar préstamo</button><button type="button" class="tb-btn" data-form-prestamo="no-disponible">Marcar no disponible</button><button type="button" class="tb-btn" data-form-prestamo="cancelar">Cancelar</button></div>
+        <p class="tb-mas-acciones" data-acciones-prestamo hidden><button type="button" class="tb-link" data-accion-camisa="editar">Editar esta camiseta</button><button type="button" class="tb-link is-bad" data-accion-camisa="quitar">Quitar esta camiseta</button></p>
         <p class="tb-editor-sub">«Marcar no disponible» es para una camiseta perdida, rota o en lavado: no se presta y no cuenta como disponible hasta que la vuelvas a marcar.</p>
       </form>
       <div class="tb-scroll">
@@ -755,7 +762,7 @@ button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
     <div class="tb-sec" id="numeros">
       <div class="tb-sec-head">
         <h2>Camisetas con nombre</h2>
-        <p class="tb-note">Camisetas personales, con el nombre estampado. Sirve para ver qué números ya están tomados.<span class="tb-solo-editor" data-perm="camisetas"> Toca una camiseta (o su lápiz) para editarla; la X la quita.</span></p>
+        <p class="tb-note">Camisetas personales, con el nombre estampado. Sirve para ver qué números ya están tomados.<span class="tb-solo-editor" data-perm="camisetas"> Toca una camiseta para editarla o quitarla.</span></p>
       </div>
       <div class="tb-nums">
         <div class="tb-num-group" id="numeros-old"><h3><span class="tb-sw is-old"></span>Old <span class="tb-num-cuenta" data-draw="valor" data-source="camisetas_por_modelo" data-field="con_nombre" data-where="modelo=Old">—</span></h3><ul class="tb-num-list" data-draw="numeros" data-modelo="Old" data-tipo="nombre" data-source="camisetas_actual"></ul></div>
@@ -1607,6 +1614,8 @@ dash.calc('plantel_totales', {
     avisar(formCam, null);
     T.camisaEdit = null;
     textosFormCam('Nueva camiseta', 'Guardar camiseta');
+    const masEditar = formCam.querySelector('[data-acciones-editar]');
+    if (masEditar) masEditar.hidden = true;
     const sel = formCam.querySelector('[name="modelo"]');
     if (sel && modelo) sel.value = modelo;
     formCam.hidden = false;
@@ -1625,9 +1634,25 @@ dash.calc('plantel_totales', {
     formCam.querySelector('[name="numero"]').value = String(c.numero);
     formCam.querySelector('[name="nombre"]').value = c.nombre || '';
     textosFormCam('Editar camiseta ' + c.modelo + ' n.º ' + c.numero + ' (' + (c.nombre || 'del equipo') + ')', 'Guardar cambios');
+    const masEditar = formCam.querySelector('[data-acciones-editar]');
+    if (masEditar) masEditar.hidden = false;
     formCam.scrollIntoView({ block: 'center', behavior: 'smooth' });
   };
   const camisaDe = (nodo) => ({ modelo: nodo.dataset.modelo, numero: Number(nodo.dataset.numero), nombre: nodo.dataset.nombre || null, id: nodo.dataset.id || null });
+  const camisaPorClave = (modelo, numero) => {
+    const r = datos('camisetas_actual').find((x) => norm(x.modelo) === norm(modelo) && Number(x.numero) === Number(numero));
+    return r ? { modelo: r.modelo, numero: Number(r.numero), nombre: r.nombre || null, id: r.agregada && r.id ? r.id : null } : null;
+  };
+  const abrirQuitarCam = (c) => {
+    if (!confirmarCam) return;
+    soloEste('cam-quitar');
+    T.camisaSel = c;
+    avisar(confirmarCam, null);
+    confirmarCam.hidden = false;
+    dash.draw('camiseta-sel');
+    const si = confirmarCam.querySelector('[data-camisa="si"]');
+    if (si) si.focus({ preventScroll: true });
+  };
   const cerrarFormCam = () => { if (!formCam) return; formCam.hidden = true; formCam.reset(); avisar(formCam, null); T.camisaEdit = null; };
   const guardarEdicionCam = async (edit, modelo, numero, nombre) => {
     const kViejo = norm(edit.modelo) + '|' + Number(edit.numero);
@@ -1698,13 +1723,23 @@ dash.calc('plantel_totales', {
       const editar = e.target.closest('[data-camisa-editar]');
       if (editar) { abrirEditarCam(camisaDe(editar)); return; }
       const quitar = e.target.closest('[data-camisa-quitar]');
-      if (quitar) {
-        soloEste('cam-quitar');
-        T.camisaSel = { modelo: quitar.dataset.modelo, numero: Number(quitar.dataset.numero), nombre: quitar.dataset.nombre || null, id: quitar.dataset.id || null };
-        if (confirmarCam) { avisar(confirmarCam, null); confirmarCam.hidden = false; }
-        dash.draw('camiseta-sel');
-        const si = confirmarCam && confirmarCam.querySelector('[data-camisa="si"]');
-        if (si) si.focus({ preventScroll: true });
+      if (quitar) { abrirQuitarCam(camisaDe(quitar)); return; }
+      const accion = e.target.closest('[data-accion-camisa]');
+      if (accion) {
+        // «Editar / Quitar esta camiseta» desde el cuadro que se abrió al tocarla
+        let c = null;
+        if (accion.closest('#form-camiseta')) c = T.camisaEdit;
+        else if (accion.closest('#disponible-camiseta')) {
+          const m = datos('no_disponibles_actual').find((x) => x.id === T.noDispSel);
+          c = m ? camisaPorClave(m.modelo, m.numero) : null;
+        } else if (accion.closest('#form-prestamo')) {
+          const v = String((accion.closest('form').querySelector('[name="camiseta"]') || {}).value || '');
+          const corte = v.lastIndexOf('|');
+          c = v ? camisaPorClave(v.slice(0, corte), v.slice(corte + 1)) : null;
+        }
+        if (!c) return;
+        if (accion.dataset.accionCamisa === 'editar') abrirEditarCam(c);
+        else abrirQuitarCam(c);
         return;
       }
       const restaurar = e.target.closest('[data-camisa-restaurar]');
@@ -1755,6 +1790,8 @@ dash.calc('plantel_totales', {
     T.prestamoSel = clave || '';
     const desde = formPrest.querySelector('[name="desde"]');
     if (desde) desde.value = T.hoy();
+    const masPrestamo = formPrest.querySelector('[data-acciones-prestamo]');
+    if (masPrestamo) masPrestamo.hidden = !clave;
     formPrest.hidden = false;
     dash.draw('select-camisetas-libres');
     formPrest.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
