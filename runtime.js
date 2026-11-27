@@ -119,7 +119,7 @@
     },
     data,
     onData(fn) { alCambiar.push(fn); try { fn(); } catch (e) { /* se reintenta al cargar */ } },
-    setLink(id) { try { history.replaceState(null, '', '#' + id); } catch (e) { /* sin historial */ } },
+    setLink(id) { try { history.replaceState(history.state, '', '#' + id); } catch (e) { /* sin historial */ } },
     params() { return {}; },
     setParams() {},
     resetParams() {},

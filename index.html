@@ -1374,7 +1374,29 @@ dash.calc('plantel_totales', {
       if (n === nombre) continue;
       try { if (c.abierto()) c.cerrar(); } catch (e) { console.error('cerrar ' + n, e); }
     }
+    setTimeout(sincronizarAtras, 0);
   };
+
+  // Botón «atrás» del celular: si hay un cuadro abierto, lo cierra en vez de salir de la página.
+  // Mientras haya un cuadro abierto se deja un paso extra en el historial; al cerrarlo de otra forma, se quita.
+  const algunoAbierto = () => [...cuadros.values()].some((c) => { try { return c.abierto(); } catch (e) { return false; } });
+  const pasoMarcado = () => Boolean(history.state && history.state.tbCuadro);
+  let volviendo = false;
+  function sincronizarAtras() {
+    const abierto = algunoAbierto();
+    try {
+      if (abierto && !pasoMarcado()) history.pushState({ ...(history.state || {}), tbCuadro: true }, '', location.href);
+      else if (!abierto && pasoMarcado() && !volviendo) { volviendo = true; history.back(); }
+    } catch (e) { /* sin historial */ }
+  }
+  window.addEventListener('popstate', () => {
+    if (volviendo) { volviendo = false; return; }
+    for (const [n, c] of cuadros) {
+      try { if (c.abierto()) c.cerrar(); } catch (e) { console.error('cerrar ' + n, e); }
+    }
+  });
+  setInterval(sincronizarAtras, 300);
+  registrarCuadro('ingreso', () => { const f = document.querySelector('.tb-acceso-form'); return Boolean(f && !f.hidden); }, () => { const b = document.querySelector('[data-acceso="cancelar"]'); if (b) b.click(); });
 
   usar('user').then(async (user) => {
     let puede = null;
