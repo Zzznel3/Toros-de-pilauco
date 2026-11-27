@@ -63,7 +63,25 @@
 .tb-checks { display: flex; flex-wrap: wrap; gap: 4px 16px; border: 0; padding: 0; margin: 0; min-width: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .tb-checks legend { padding: 0; margin-bottom: 4px; }
 .tb-checks label, .tb-check-lista label { display: inline-flex; align-items: center; gap: 6px; color: var(--color-fg); font-size: var(--cds-font-size-body); cursor: pointer; }
-.tb-check-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 130px), 1fr)); gap: 4px 12px; max-height: 230px; overflow: auto; padding: 8px 10px; border: 1px solid var(--color-border-line); border-radius: 6px; }
+/* Lista de jugadores para elegir: cada uno es una píldora; marcada se pone blanca con ✓ */
+.tb-check-lista { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.tb-check-lista label { position: relative; display: inline-flex; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tb-check-lista input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; pointer-events: none; }
+.tb-check-lista label > span, .tb-invitados li { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; box-sizing: border-box; padding: 6px 14px 6px 10px; border-radius: 999px; border: 1px solid var(--color-border-line); color: var(--color-fg); font-size: var(--cds-font-size-body); line-height: 1.2; user-select: none; }
+.tb-check-lista label > span::before { content: "+"; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: 13px; font-weight: 700; color: var(--color-fg-muted); border: 1px solid var(--color-border-line); }
+.tb-check-lista label:hover > span { border-color: var(--color-fg-muted); }
+.tb-check-lista input:checked + span, .tb-invitados li { background: var(--tb-acento); border-color: var(--tb-acento); color: var(--tb-acento-texto); font-weight: 600; }
+.tb-check-lista input:checked + span::before { content: "✓"; color: var(--tb-acento); background: var(--tb-acento-texto); border-color: var(--tb-acento-texto); }
+.tb-check-lista input:focus-visible + span { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.tb-invitados:empty { display: none; }
+.tb-invitados li { padding-right: 6px; }
+.tb-invitados li button { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--tb-acento-texto) 15%, transparent); color: inherit; font: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
+.tb-invitar { display: flex; gap: 8px; }
+.tb-invitar input { flex: 1; min-width: 0; }
+.tb-cuenta { font-weight: 600; color: var(--color-fg); }
+.tb-reparto { margin: 0; padding: 12px 14px; border-radius: 8px; background: color-mix(in srgb, var(--color-fg) 6%, transparent); border: 1px solid var(--color-border-line); font-size: var(--cds-font-size-body); color: var(--color-fg-muted); }
+.tb-reparto b { color: var(--color-fg); }
+.tb-reparto .tb-reparto-grande { display: block; margin-top: 2px; font-family: var(--tb-titular); font-size: 1.5rem; font-weight: 700; color: var(--color-fg); letter-spacing: .01em; }
 .tb-acciones { display: flex; flex-wrap: wrap; gap: 8px; padding-top: var(--cds-gap-xs); }
 .tb-msg-error { font-size: var(--cds-font-size-caption); color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
 .tb-quitar { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--color-bad) 15%, transparent); color: var(--color-bad); cursor: pointer; flex: none; }
@@ -518,15 +536,19 @@ button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
           <label class="tb-field" for="amistoso-rival">Equipo contra el que se juega<input id="amistoso-rival" name="rival" type="text" maxlength="50" autocomplete="off"></label>
           <label class="tb-field" for="amistoso-lugar">Lugar donde se juega<input id="amistoso-lugar" name="lugar" type="text" maxlength="60" autocomplete="off"></label>
           <label class="tb-field" for="amistoso-fecha">Fecha (opcional)<input id="amistoso-fecha" name="fecha" type="date"></label>
-          <fieldset class="tb-checks"><legend>El valor del arbitraje es</legend><label for="amistoso-modo-total"><input id="amistoso-modo-total" type="radio" name="modo" value="total" checked>Total del partido (se divide entre los que juegan)</label><label for="amistoso-modo-jugador"><input id="amistoso-modo-jugador" type="radio" name="modo" value="jugador">Por jugador</label></fieldset>
-          <label class="tb-field" for="amistoso-valor"><span data-modo-label="total">Valor total del arbitraje ($)</span><span data-modo-label="jugador" hidden>Arbitraje por jugador ($)</span><input id="amistoso-valor" name="valor" type="number" min="0" step="100" inputmode="numeric"></label>
-          <div class="tb-field tb-ancho"><span>Jugadores que van a jugar</span><div class="tb-check-lista" data-draw="form-amistoso-jugadores" data-source="plantel"></div></div>
-          <label class="tb-field tb-ancho" for="amistoso-otros">Otros jugadores que no están en la lista (separados por coma)<input id="amistoso-otros" name="otros" type="text" maxlength="300" autocomplete="off"></label>
+          <div class="tb-field tb-ancho"><span>Jugadores del equipo que van a jugar <b class="tb-cuenta" data-cuenta-equipo></b></span><div class="tb-check-lista" data-draw="form-amistoso-jugadores" data-source="plantel"></div></div>
+          <div class="tb-field tb-ancho">
+            <label for="amistoso-invitado">Jugadores invitados (no son del equipo) <b class="tb-cuenta" data-cuenta-invitados></b></label>
+            <div class="tb-invitar"><input id="amistoso-invitado" name="invitado" type="text" maxlength="40" autocomplete="off" placeholder="Nombre del invitado" enterkeyhint="done"><button type="button" class="tb-btn" data-invitado-agregar>+ Agregar</button></div>
+            <ul class="tb-check-lista tb-invitados" data-invitados aria-label="Invitados"></ul>
+          </div>
+          <fieldset class="tb-checks tb-ancho"><legend>¿Cuánto sale el arbitraje?</legend><label for="amistoso-modo-total"><input id="amistoso-modo-total" type="radio" name="modo" value="total" checked>Total del partido (se divide entre los que juegan)</label><label for="amistoso-modo-jugador"><input id="amistoso-modo-jugador" type="radio" name="modo" value="jugador">Lo mismo por cada jugador</label></fieldset>
+          <label class="tb-field" for="amistoso-valor"><span data-modo-label="total">Valor total del arbitraje ($)</span><span data-modo-label="jugador" hidden>Valor por jugador ($)</span><input id="amistoso-valor" name="valor" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej: 10.000"></label>
         </div>
-        <p class="tb-editor-sub" data-reparto-amistoso></p>
+        <p class="tb-reparto" data-reparto-amistoso aria-live="polite"></p>
         <p class="tb-msg-error" data-msg="rival" hidden>Escribe el equipo contra el que se juega.</p>
-        <p class="tb-msg-error" data-msg="valor" hidden>Escribe el valor del arbitraje en pesos (0 o más).</p>
-        <p class="tb-msg-error" data-msg="jugadores" hidden>Marca al menos un jugador.</p>
+        <p class="tb-msg-error" data-msg="valor" hidden>Escribe cuánto sale el arbitraje, por ejemplo 10.000.</p>
+        <p class="tb-msg-error" data-msg="jugadores" hidden>Marca al menos un jugador (del equipo o invitado).</p>
         <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
         <div class="tb-acciones"><button type="submit" class="tb-btn is-primary" data-guardar-amistoso>Guardar amistoso</button><button type="button" class="tb-btn" data-form-amistoso="cancelar">Cancelar</button></div>
       </form>
@@ -2027,28 +2049,74 @@ dash.calc('plantel_totales', {
   const seccionAmis = document.getElementById('amistosos');
   const campoAmis = (n) => formAmis.querySelector('[name="' + n + '"]');
   const modoAmis = () => ((formAmis.querySelector('[name="modo"]:checked') || {}).value === 'jugador' ? 'jugador' : 'total');
-  const otrosAmis = () => String(campoAmis('otros').value || '').split(',').map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean);
+  // Pesos escritos como «10000», «10.000», «$10.000» o «10 mil» → 10000 (null si no se entiende)
+  const leerPesos = (texto) => {
+    const t = String(texto || '').trim().toLowerCase();
+    if (!t) return null;
+    const mil = /^([\d.,\s]+)\s*mil$/.exec(t.replace(/\$/g, '').trim());
+    if (mil) { const n = Number(mil[1].replace(/\s/g, '').replace(/\./g, '').replace(',', '.')); return Number.isFinite(n) ? Math.round(n * 1000) : null; }
+    const solo = t.replace(/[$\s.]/g, '').replace(/,\d{0,2}$/, '');
+    return /^\d+$/.test(solo) ? Number(solo) : null;
+  };
+  const plural = (n, uno, varios) => n + ' ' + (n === 1 ? uno : varios);
   const jugadoresAmis = () => {
-    const plantel = datos('plantel').map((p) => p.jugador);
-    const todos = [];
-    for (const n of [...(T.formAmistoso ? T.formAmistoso.jugadores : []), ...otrosAmis()]) {
-      const igual = plantel.find((x) => norm(x) === norm(n)) || n;
-      if (!todos.some((x) => norm(x) === norm(igual))) todos.push(igual);
-    }
-    return todos;
+    if (!T.formAmistoso) return [];
+    const equipo = datos('plantel').map((p) => p.jugador).filter((j) => [...T.formAmistoso.jugadores].some((x) => norm(x) === norm(j)));
+    for (const j of T.formAmistoso.jugadores) if (!equipo.some((x) => norm(x) === norm(j))) equipo.push(j);
+    return [...equipo, ...T.formAmistoso.invitados.filter((i) => !equipo.some((x) => norm(x) === norm(i)))];
+  };
+  const pintarInvitados = () => {
+    const ul = formAmis && formAmis.querySelector('[data-invitados]');
+    if (!ul || !T.formAmistoso) return;
+    ul.replaceChildren(...T.formAmistoso.invitados.map((nombre, i) => {
+      const li = T.el('li');
+      const x = T.el('button', null, '×');
+      x.type = 'button';
+      x.dataset.invitadoQuitar = String(i);
+      x.setAttribute('aria-label', 'Quitar a ' + nombre);
+      li.append(T.el('span', null, nombre), x);
+      return li;
+    }));
+  };
+  const agregarInvitado = () => {
+    const campo = campoAmis('invitado');
+    const nombre = String(campo.value || '').trim().replace(/\s+/g, ' ').replace(/,/g, '');
+    if (!nombre || !T.formAmistoso) return;
+    const delEquipo = datos('plantel').find((p) => norm(p.jugador) === norm(nombre));
+    if (delEquipo) T.formAmistoso.jugadores.add(delEquipo.jugador); // si es del equipo, se marca en la lista del equipo
+    else if (!T.formAmistoso.invitados.some((x) => norm(x) === norm(nombre))) T.formAmistoso.invitados.push(nombre);
+    campo.value = '';
+    if (delEquipo) dash.draw('form-amistoso-jugadores');
+    pintarInvitados();
+    pintarReparto();
+    campo.focus({ preventScroll: true });
   };
   const pintarReparto = () => {
-    if (!formAmis) return;
+    if (!formAmis || !T.formAmistoso) return;
     const modo = modoAmis();
     for (const s of formAmis.querySelectorAll('[data-modo-label]')) s.hidden = s.dataset.modoLabel !== modo;
+    const nEquipo = T.formAmistoso.jugadores.size;
+    const nInv = T.formAmistoso.invitados.length;
+    const cEq = formAmis.querySelector('[data-cuenta-equipo]');
+    const cInv = formAmis.querySelector('[data-cuenta-invitados]');
+    if (cEq) cEq.textContent = nEquipo ? '· ' + plural(nEquipo, 'elegido', 'elegidos') : '';
+    if (cInv) cInv.textContent = nInv ? '· ' + nInv : '';
     const caja = formAmis.querySelector('[data-reparto-amistoso]');
-    const valor = Math.round(Number(campoAmis('valor').value) || 0);
-    const n = jugadoresAmis().length;
     if (!caja) return;
-    if (!n || !valor) { caja.textContent = n ? n + (n === 1 ? ' jugador' : ' jugadores') + '.' : ''; return; }
-    if (modo === 'jugador') { caja.textContent = n + (n === 1 ? ' jugador' : ' jugadores') + ' × ' + T.clp(valor) + ' = ' + T.clp(valor * n) + ' en total.'; return; }
+    const n = jugadoresAmis().length;
+    const valor = leerPesos(campoAmis('valor').value);
+    const jug = plural(n, 'jugador', 'jugadores');
+    const grande = (texto) => T.el('span', 'tb-reparto-grande', texto);
+    if (!n && !valor) { caja.textContent = 'Marca a los jugadores y escribe cuánto sale el arbitraje: la página saca la cuenta.'; return; }
+    if (!n) { caja.textContent = 'Arbitraje ' + T.clp(valor) + '. Falta marcar quiénes juegan.'; return; }
+    if (valor == null) { caja.replaceChildren(document.createTextNode(jug + ' (' + plural(nEquipo, 'del equipo', 'del equipo') + (nInv ? ' y ' + plural(nInv, 'invitado', 'invitados') : '') + '). Escribe cuánto sale el arbitraje.')); return; }
+    if (modo === 'jugador') {
+      caja.replaceChildren(document.createTextNode(T.clp(valor) + ' × ' + jug + ' ='), grande(T.clp(valor * n) + ' en total'));
+      return;
+    }
     const base = Math.floor(valor / n), resto = valor - base * n;
-    caja.textContent = n + (n === 1 ? ' jugador' : ' jugadores') + ': cada uno paga ' + (resto ? '≈ ' : '') + T.clp(base) + (resto ? ' (' + resto + ' pagan ' + T.clp(base + 1) + ')' : '') + '.';
+    caja.replaceChildren(document.createTextNode(T.clp(valor) + ' ÷ ' + jug + ' ='), grande((resto ? '≈ ' : '') + T.clp(base) + ' cada uno'));
+    if (resto) caja.append(document.createTextNode('Como no da exacto, ' + plural(resto, 'jugador paga', 'jugadores pagan') + ' ' + T.clp(base + 1) + '.'));
   };
   const abrirFormAmistoso = (id) => {
     if (!formAmis) return;
@@ -2057,18 +2125,21 @@ dash.calc('plantel_totales', {
     avisar(formAmis, null);
     const doc = id ? datos('amistosos').find((x) => x.id === id) || null : null;
     const p = id ? datos('amistosos_todos').find((x) => x.id === id) || null : null;
-    T.formAmistoso = { id: doc ? doc.id : null, creado: doc ? doc.creado : null, jugadores: new Set(p ? p.jugadores.map((j) => j.jugador) : []) };
+    const nombres = p ? p.jugadores.map((j) => j.jugador) : [];
+    const delPlantel = (n) => datos('plantel').some((x) => norm(x.jugador) === norm(n));
+    T.formAmistoso = { id: doc ? doc.id : null, creado: doc ? doc.creado : null, jugadores: new Set(nombres.filter(delPlantel)), invitados: nombres.filter((n) => !delPlantel(n)) };
     const titulo = formAmis.querySelector('[data-titulo-amistoso]');
     if (titulo) titulo.textContent = doc ? 'Editar amistoso vs ' + doc.rival : 'Nuevo amistoso';
     if (doc) {
       campoAmis('rival').value = doc.rival || '';
       campoAmis('lugar').value = doc.lugar || '';
       campoAmis('fecha').value = doc.fecha || '';
-      campoAmis('valor').value = String(Number(doc.valor) || 0);
+      campoAmis('valor').value = (Number(doc.valor) || 0).toLocaleString('es-CL');
       for (const r of formAmis.querySelectorAll('[name="modo"]')) r.checked = r.value === (doc.modo === 'jugador' ? 'jugador' : 'total');
     }
     formAmis.hidden = false;
     dash.draw('form-amistoso-jugadores');
+    pintarInvitados();
     pintarReparto();
     formAmis.scrollIntoView({ block: 'start', behavior: 'smooth' });
     campoAmis('rival').focus({ preventScroll: true });
@@ -2085,16 +2156,22 @@ dash.calc('plantel_totales', {
       pintarReparto();
     });
     formAmis.addEventListener('input', pintarReparto);
+    formAmis.addEventListener('click', (e) => {
+      if (e.target.closest('[data-invitado-agregar]')) { agregarInvitado(); return; }
+      const quitar = e.target.closest('[data-invitado-quitar]');
+      if (quitar && T.formAmistoso) { T.formAmistoso.invitados.splice(Number(quitar.dataset.invitadoQuitar), 1); pintarInvitados(); pintarReparto(); }
+    });
+    campoAmis('invitado').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); agregarInvitado(); } });
     formAmis.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!T.formAmistoso) return;
+      if (String(campoAmis('invitado').value || '').trim()) agregarInvitado(); // un invitado escrito pero sin tocar «Agregar» también cuenta
       const rival = String(campoAmis('rival').value || '').trim().replace(/\s+/g, ' ');
       const lugar = String(campoAmis('lugar').value || '').trim().replace(/\s+/g, ' ');
       const fecha = String(campoAmis('fecha').value || '');
-      const valorTxt = String(campoAmis('valor').value || '').trim();
-      const valor = Number(valorTxt);
+      const valor = leerPesos(campoAmis('valor').value);
       if (!rival) { avisar(formAmis, 'rival'); return; }
-      if (valorTxt === '' || !Number.isFinite(valor) || valor < 0) { avisar(formAmis, 'valor'); return; }
+      if (valor == null) { avisar(formAmis, 'valor'); return; }
       const jugadores = jugadoresAmis().map((j) => j.replace(/,/g, ''));
       if (!jugadores.length) { avisar(formAmis, 'jugadores'); return; }
       const enviar = formAmis.querySelector('[type="submit"]');
@@ -2545,7 +2622,7 @@ dash.draw('form-amistoso-jugadores', (box) => {
     cb.name = 'amistoso-jugador';
     cb.value = n;
     cb.checked = elegidos.some((x) => x.toLowerCase() === n.toLowerCase());
-    lab.append(cb, document.createTextNode(n));
+    lab.append(cb, T.el('span', null, n));
     return lab;
   }));
 });
@@ -2627,7 +2704,7 @@ dash.draw('form-liga-jugadores', (box) => {
     cb.name = 'liga-jugador';
     cb.value = n;
     cb.checked = elegidos.some((x) => x.toLowerCase() === n.toLowerCase());
-    lab.append(cb, document.createTextNode(n));
+    lab.append(cb, T.el('span', null, n));
     return lab;
   }));
 });
