@@ -282,6 +282,24 @@
 .tb.puede-camisetas .tb-jersey[data-camisa-con-nombre]:hover { outline: 2px solid color-mix(in srgb, var(--color-fg) 35%, transparent); outline-offset: 1px; }
 .tb-num-cell.is-editado::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--color-warn); margin-inline-start: 6px; vertical-align: middle; }
 .tb-table tr.is-sel td { background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
+/* Partidos amistosos */
+.tb-amistosos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--cds-gap-md); }
+.tb-amistoso { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+.tb-amistoso-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.tb-amistoso-top h3 { font-family: var(--tb-titular); font-weight: 700; font-size: 1.35rem; line-height: 1.1; text-transform: uppercase; letter-spacing: .01em; min-width: 0; overflow-wrap: anywhere; }
+.tb-amistoso-info { display: grid; gap: 2px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-amistoso-info p { margin: 0; }
+.tb-amistoso-jugadores { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tb-amis-jug { font: inherit; font-size: var(--cds-font-size-caption); display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px; border: 1px solid transparent; }
+.tb-amis-jug b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tb-amis-jug.is-ok { background: color-mix(in srgb, var(--color-ok) 16%, transparent); color: color-mix(in srgb, var(--color-ok) 70%, var(--color-fg)); }
+.tb-amis-jug.is-bad { background: color-mix(in srgb, var(--color-bad) 16%, transparent); color: color-mix(in srgb, var(--color-bad) 75%, var(--color-fg)); }
+button.tb-amis-jug { cursor: pointer; }
+button.tb-amis-jug:hover { border-color: currentColor; }
+button.tb-amis-jug:disabled { opacity: .5; cursor: default; }
+.tb-amistoso-pie { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.tb-amistoso-acciones { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--cds-font-size-caption); border-top: 1px solid var(--color-border-line); padding-top: var(--cds-gap-sm); }
+.tb-amistoso-confirmar { font-size: var(--cds-font-size-caption); }
 .tb.puede-camisetas .tb-equipo.marcando .tb-jersey.is-prestada { cursor: not-allowed; }
 .tb.puede-camisetas .tb-equipo.marcando .tb-jersey.is-no-disp { opacity: .55; }
 .tb.puede-camisetas .tb-equipo.marcando .tb-jersey[aria-pressed="true"]::after { content: "✓"; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--color-ok); color: #0b0b0b; font-size: 11px; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--color-panel); }
@@ -364,6 +382,7 @@
     <button type="button" class="tb-tab" role="tab" id="tab-jugadores" aria-controls="jugadores" aria-selected="true">Jugadores</button>
     <button type="button" class="tb-tab" role="tab" id="tab-pagos" aria-controls="pagos" aria-selected="false" tabindex="-1">Pagos</button>
     <button type="button" class="tb-tab" role="tab" id="tab-ligas" aria-controls="ligas" aria-selected="false" tabindex="-1">Ligas</button>
+    <button type="button" class="tb-tab" role="tab" id="tab-amistosos" aria-controls="amistosos" aria-selected="false" tabindex="-1">Amistosos</button>
     <button type="button" class="tb-tab" role="tab" id="tab-camisetas" aria-controls="camisetas" aria-selected="false" tabindex="-1">Camisetas</button>
     <button type="button" class="tb-tab" role="tab" id="tab-historial" aria-controls="historial" aria-selected="false" tabindex="-1" data-perm="admin">Historial</button>
     <button type="button" class="tb-tab" role="tab" id="tab-administradores" aria-controls="administradores" aria-selected="false" tabindex="-1" data-perm="principal">Administradores</button>
@@ -449,6 +468,13 @@
         <div class="tb-bar" data-draw="barra" data-source="resumen" data-where="area=camisetas"></div>
         <p class="tb-tile-foot"><b data-draw="valor" data-source="resumen" data-field="pagados" data-where="area=camisetas">—</b> de <b data-draw="valor" data-source="resumen" data-field="items" data-where="area=camisetas">—</b> pagadas · <b data-draw="valor" data-source="resumen" data-field="recaudado" data-where="area=camisetas" data-format="clp">—</b></p>
       </article>
+      <article class="tb-tile" id="ficha-amistosos" hidden>
+        <h3 class="tb-tile-label">Amistosos</h3>
+        <p class="tb-tile-num"><span class="dash-skeleton" data-tile-estado data-draw="valor" data-source="resumen" data-field="pendiente" data-where="area=amistosos" data-format="clp">—</span></p>
+        <p class="tb-tile-sub">pendiente de arbitraje</p>
+        <div class="tb-bar" data-draw="barra" data-source="resumen" data-where="area=amistosos"></div>
+        <p class="tb-tile-foot"><b data-draw="valor" data-source="resumen" data-field="pagados" data-where="area=amistosos">—</b> de <b data-draw="valor" data-source="resumen" data-field="items" data-where="area=amistosos">—</b> pagos · <b data-draw="valor" data-source="resumen" data-field="recaudado" data-where="area=amistosos" data-format="clp">—</b></p>
+      </article>
     </div>
     <template id="tpl-tile">
       <article class="tb-tile">
@@ -464,7 +490,7 @@
     <div class="tb-sec" id="deudores">
       <div class="tb-sec-head">
         <h2>Quién debe</h2>
-        <p class="tb-note">Suma las cuotas de arbitraje marcadas como «Debe», los saldos por pagar y las inscripciones pendientes. Un mes sin registro no se cuenta como deuda. La inscripción de cada liga se ve y se cambia en la pestaña Ligas.</p>
+        <p class="tb-note">Suma las cuotas de arbitraje marcadas como «Debe», los saldos por pagar, las inscripciones pendientes y el arbitraje de los amistosos. Un mes sin registro no se cuenta como deuda. La inscripción de cada liga se ve y se cambia en la pestaña Ligas.</p>
       </div>
       <div class="tb-scroll">
         <table class="tb-table" data-source="deudores" data-row-key="jugador">
@@ -472,6 +498,40 @@
           <tbody data-draw="tabla-deudores"></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <!-- AMISTOSOS -->
+  <section class="tb-panel" id="amistosos" role="tabpanel" aria-labelledby="tab-amistosos" hidden>
+    <div class="tb-sec">
+      <div class="tb-sec-head">
+        <div class="tb-sec-top">
+          <h2>Partidos amistosos</h2>
+          <div class="tb-sec-top-acciones tb-solo-editor"><button type="button" class="tb-btn" data-amistoso-nuevo data-perm="ligas">+ Nuevo amistoso</button></div>
+        </div>
+        <p class="tb-note">Cada amistoso con el rival, el lugar, quiénes juegan y lo que paga cada uno de arbitraje. Lo que se debe de un amistoso se suma a la deuda de cada jugador.<span class="tb-solo-editor" data-perm-pagos> Toca a un jugador para marcar que pagó (o que debe).</span></p>
+        <ul class="tb-legend" aria-label="Leyenda"><li><span class="tb-chip is-ok">Pagó</span> pagó su parte</li><li><span class="tb-chip is-bad">Debe</span> todavía no paga</li></ul>
+      </div>
+      <form class="tb-form tb-liga-form tb-solo-editor" id="form-amistoso" hidden novalidate data-perm="ligas">
+        <h3 data-titulo-amistoso>Nuevo amistoso</h3>
+        <div class="tb-form-grid">
+          <label class="tb-field" for="amistoso-rival">Equipo contra el que se juega<input id="amistoso-rival" name="rival" type="text" maxlength="50" autocomplete="off"></label>
+          <label class="tb-field" for="amistoso-lugar">Lugar donde se juega<input id="amistoso-lugar" name="lugar" type="text" maxlength="60" autocomplete="off"></label>
+          <label class="tb-field" for="amistoso-fecha">Fecha (opcional)<input id="amistoso-fecha" name="fecha" type="date"></label>
+          <fieldset class="tb-checks"><legend>El valor del arbitraje es</legend><label for="amistoso-modo-total"><input id="amistoso-modo-total" type="radio" name="modo" value="total" checked>Total del partido (se divide entre los que juegan)</label><label for="amistoso-modo-jugador"><input id="amistoso-modo-jugador" type="radio" name="modo" value="jugador">Por jugador</label></fieldset>
+          <label class="tb-field" for="amistoso-valor"><span data-modo-label="total">Valor total del arbitraje ($)</span><span data-modo-label="jugador" hidden>Arbitraje por jugador ($)</span><input id="amistoso-valor" name="valor" type="number" min="0" step="100" inputmode="numeric"></label>
+          <div class="tb-field tb-ancho"><span>Jugadores que van a jugar</span><div class="tb-check-lista" data-draw="form-amistoso-jugadores" data-source="plantel"></div></div>
+          <label class="tb-field tb-ancho" for="amistoso-otros">Otros jugadores que no están en la lista (separados por coma)<input id="amistoso-otros" name="otros" type="text" maxlength="300" autocomplete="off"></label>
+        </div>
+        <p class="tb-editor-sub" data-reparto-amistoso></p>
+        <p class="tb-msg-error" data-msg="rival" hidden>Escribe el equipo contra el que se juega.</p>
+        <p class="tb-msg-error" data-msg="valor" hidden>Escribe el valor del arbitraje en pesos (0 o más).</p>
+        <p class="tb-msg-error" data-msg="jugadores" hidden>Marca al menos un jugador.</p>
+        <p class="tb-msg-error" data-msg="error" hidden>No se guardó. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
+        <div class="tb-acciones"><button type="submit" class="tb-btn is-primary" data-guardar-amistoso>Guardar amistoso</button><button type="button" class="tb-btn" data-form-amistoso="cancelar">Cancelar</button></div>
+      </form>
+      <div class="tb-amistosos" data-draw="amistosos" data-source="amistosos_todos"></div>
+      <p class="tb-msg-error" data-msg-amistoso hidden>No se guardó el cambio. Revisa tu sesión de administrador e inténtalo de nuevo.</p>
     </div>
   </section>
 
@@ -815,7 +875,7 @@ window.toros = (() => {
   const fechaLocal = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null; };
   const fechaCorta = (iso) => { const d = fechaLocal(iso); return d ? d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; };
   const diasDesde = (iso) => { const d = fechaLocal(iso); if (!d) return null; const h = fechaLocal(hoy()); return Math.round((h - d) / 86400000); };
-  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null, marcando: false, noDispPend: new Set(), noDispSel: null, pedidoSel: null, camisaEdit: null };
+  return { clp, fmt, enc, where, fila, el, mensaje, estadoTabla, esPagado, chipEstado, estadoArbitraje, slug, lista, MESES, rangoMeses, abrev, partidosDe, descPeriodo, hoy, fechaCorta, diasDesde, prestamoSel: '', devolverSel: null, filtro: 'todos', editandoLigas: new Set(), sel: null, formLiga: null, formJugadorLigas: new Set(), ligasAbiertas: new Set(), camisaSel: null, marcando: false, noDispPend: new Set(), noDispSel: null, pedidoSel: null, camisaEdit: null, formAmistoso: null, amistosoBorrar: null };
 })();
 </script>
 
@@ -1001,11 +1061,41 @@ dash.calc('arbitraje_meses', {
   },
 });
 
+dash.calc('amistosos_todos', {
+  inputs: ['amistosos', 'amistosos_pagos'],
+  title: 'Partidos amistosos',
+  description: 'Cada amistoso con su rival, lugar, fecha y arbitraje. Si el valor es el total del partido se divide en partes iguales entre los que juegan (los primeros pagan $1 más si no da exacto). Cada jugador debe su parte hasta que se marca que pagó.',
+  fn: (partidos, pagos) => {
+    const norm = (s) => String(s == null ? '' : s).trim().toLowerCase();
+    const lista = (v) => String(v == null ? '' : v).split(',').map((x) => x.trim()).filter(Boolean);
+    const pagoDe = new Map((pagos || []).map((p) => [String(p.partido) + '~' + norm(p.jugador), p]));
+    return (partidos || []).filter((p) => p.id && String(p.rival || '').trim()).map((p) => {
+      const nombres = lista(p.jugadores);
+      const n = nombres.length;
+      const valor = Math.max(0, Math.round(Number(p.valor) || 0));
+      const porJugador = p.modo === 'jugador';
+      const base = porJugador ? valor : n ? Math.floor(valor / n) : 0;
+      const resto = porJugador || !n ? 0 : valor - base * n;
+      const jugadores = nombres.map((j, i) => {
+        const pg = pagoDe.get(p.id + '~' + norm(j));
+        return { jugador: j, monto: base + (i < resto ? 1 : 0), estado: pg && pg.estado === 'Pagado' ? 'Pagado' : 'Debe' };
+      });
+      const pagados = jugadores.filter((j) => j.estado === 'Pagado');
+      return {
+        id: p.id, rival: String(p.rival).trim(), lugar: String(p.lugar || '').trim(), fecha: p.fecha || '', modo: porJugador ? 'jugador' : 'total',
+        valor, total: porJugador ? valor * n : valor, cuota: base, exacto: resto === 0, jugadores,
+        pagados: pagados.length, recaudado: d3.sum(pagados, (j) => j.monto), pendiente: d3.sum(jugadores.filter((j) => j.estado !== 'Pagado'), (j) => j.monto),
+        orden: p.fecha || String(p.creado || '').slice(0, 10), creado: p.creado || '',
+      };
+    }).sort((a, b) => b.orden.localeCompare(a.orden) || b.creado.localeCompare(a.creado));
+  },
+});
+
 dash.calc('resumen', {
-  inputs: ['arbitraje_meses', 'inscripciones_actual', 'pedidos_actual', 'ligas_todas'],
+  inputs: ['arbitraje_meses', 'inscripciones_actual', 'pedidos_actual', 'ligas_todas', 'amistosos_todos'],
   title: 'Resumen por liga',
-  description: 'Recaudado y pendiente de cada liga (arbitraje más inscripción), de las camisetas y del equipo completo.',
-  fn: (meses, inscripciones, camisetas, ligas) => {
+  description: 'Recaudado y pendiente de cada liga (arbitraje más inscripción), de las camisetas, de los amistosos y del equipo completo.',
+  fn: (meses, inscripciones, camisetas, ligas, amistosos) => {
     const pagado = (e) => String(e || '').trim().toLowerCase() === 'pagado';
     const filas = ligas.map((l) => {
       const ms = meses.filter((m) => m.liga === l.key);
@@ -1017,16 +1107,17 @@ dash.calc('resumen', {
     });
     const pag = camisetas.filter((r) => pagado(r.estado));
     const cam = { area: 'camisetas', nombre: 'Camisetas', recaudado: d3.sum(pag, (r) => Number(r.valor)), pendiente: d3.sum(camisetas.filter((r) => !pagado(r.estado)), (r) => Number(r.valor)), pagados: pag.length, items: camisetas.length };
-    const total = { area: 'total', nombre: 'Total', recaudado: d3.sum(filas, (f) => f.recaudado) + cam.recaudado, pendiente: d3.sum(filas, (f) => f.pendiente) + cam.pendiente, pagados: null, items: null };
-    return [...filas, cam, total];
+    const amis = { area: 'amistosos', nombre: 'Amistosos', recaudado: d3.sum(amistosos, (p) => p.recaudado), pendiente: d3.sum(amistosos, (p) => p.pendiente), pagados: d3.sum(amistosos, (p) => p.pagados), items: d3.sum(amistosos, (p) => p.jugadores.length) };
+    const total = { area: 'total', nombre: 'Total', recaudado: d3.sum(filas, (f) => f.recaudado) + cam.recaudado + amis.recaudado, pendiente: d3.sum(filas, (f) => f.pendiente) + cam.pendiente + amis.pendiente, pagados: null, items: null };
+    return [...filas, cam, amis, total];
   },
 });
 
 dash.calc('deudores', {
-  inputs: ['arbitraje_actual', 'ligas_todas', 'inscripciones_actual', 'pedidos_actual'],
+  inputs: ['arbitraje_actual', 'ligas_todas', 'inscripciones_actual', 'pedidos_actual', 'amistosos_todos'],
   title: 'Quién debe',
-  description: 'Lo que debe cada jugador: cuotas de arbitraje marcadas «Debe» (a la cuota de su liga), saldos por pagar, inscripciones pendientes y camisetas no pagadas.',
-  fn: (arbitraje, ligas, inscripciones, camisetas) => {
+  description: 'Lo que debe cada jugador: cuotas de arbitraje marcadas «Debe» (a la cuota de su liga), saldos por pagar, inscripciones pendientes, camisetas no pagadas y su parte del arbitraje de los amistosos.',
+  fn: (arbitraje, ligas, inscripciones, camisetas, amistosos) => {
     const ligaDe = new Map(ligas.map((l) => [l.key, l]));
     const pagado = (e) => String(e || '').trim().toLowerCase() === 'pagado';
     const deudas = [];
@@ -1043,6 +1134,9 @@ dash.calc('deudores', {
       if (!pagado(r.estado)) deudas.push({ jugador: r.jugador, concepto: 'Inscripción ' + (l ? l.corto : r.liga), detalle: '', orden: 0, monto: Number(r.monto) || 0 });
     }
     for (const r of camisetas) if (!pagado(r.estado)) deudas.push({ jugador: r.jugador, concepto: 'Camiseta', detalle: 'n.º ' + r.numero, orden: 0, monto: Number(r.valor) });
+    for (const p of amistosos) {
+      for (const j of p.jugadores) if (j.estado !== 'Pagado') deudas.push({ jugador: j.jugador, concepto: 'Amistoso', detalle: 'vs ' + p.rival, orden: 0, monto: j.monto });
+    }
     const y = (xs) => (xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' y ' + xs[xs.length - 1]);
     return d3.rollups(deudas.filter((d) => d.monto > 0), (ds) => ({
       total: d3.sum(ds, (d) => d.monto),
@@ -1926,6 +2020,137 @@ dash.calc('plantel_totales', {
     for (const caja of document.querySelectorAll('#camisetas-quitadas')) caja.hidden = !hay;
   });
 
+  // Partidos amistosos: crear, editar, borrar y marcar quién pagó el arbitraje
+  const RUTA_AMISTOSOS = 'data/amistosos/partidos';
+  const RUTA_AMISTOSOS_PAGOS = 'data/amistosos/pagos';
+  const formAmis = document.getElementById('form-amistoso');
+  const seccionAmis = document.getElementById('amistosos');
+  const campoAmis = (n) => formAmis.querySelector('[name="' + n + '"]');
+  const modoAmis = () => ((formAmis.querySelector('[name="modo"]:checked') || {}).value === 'jugador' ? 'jugador' : 'total');
+  const otrosAmis = () => String(campoAmis('otros').value || '').split(',').map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean);
+  const jugadoresAmis = () => {
+    const plantel = datos('plantel').map((p) => p.jugador);
+    const todos = [];
+    for (const n of [...(T.formAmistoso ? T.formAmistoso.jugadores : []), ...otrosAmis()]) {
+      const igual = plantel.find((x) => norm(x) === norm(n)) || n;
+      if (!todos.some((x) => norm(x) === norm(igual))) todos.push(igual);
+    }
+    return todos;
+  };
+  const pintarReparto = () => {
+    if (!formAmis) return;
+    const modo = modoAmis();
+    for (const s of formAmis.querySelectorAll('[data-modo-label]')) s.hidden = s.dataset.modoLabel !== modo;
+    const caja = formAmis.querySelector('[data-reparto-amistoso]');
+    const valor = Math.round(Number(campoAmis('valor').value) || 0);
+    const n = jugadoresAmis().length;
+    if (!caja) return;
+    if (!n || !valor) { caja.textContent = n ? n + (n === 1 ? ' jugador' : ' jugadores') + '.' : ''; return; }
+    if (modo === 'jugador') { caja.textContent = n + (n === 1 ? ' jugador' : ' jugadores') + ' × ' + T.clp(valor) + ' = ' + T.clp(valor * n) + ' en total.'; return; }
+    const base = Math.floor(valor / n), resto = valor - base * n;
+    caja.textContent = n + (n === 1 ? ' jugador' : ' jugadores') + ': cada uno paga ' + (resto ? '≈ ' : '') + T.clp(base) + (resto ? ' (' + resto + ' pagan ' + T.clp(base + 1) + ')' : '') + '.';
+  };
+  const abrirFormAmistoso = (id) => {
+    if (!formAmis) return;
+    soloEste('amistoso-form');
+    formAmis.reset();
+    avisar(formAmis, null);
+    const doc = id ? datos('amistosos').find((x) => x.id === id) || null : null;
+    const p = id ? datos('amistosos_todos').find((x) => x.id === id) || null : null;
+    T.formAmistoso = { id: doc ? doc.id : null, creado: doc ? doc.creado : null, jugadores: new Set(p ? p.jugadores.map((j) => j.jugador) : []) };
+    const titulo = formAmis.querySelector('[data-titulo-amistoso]');
+    if (titulo) titulo.textContent = doc ? 'Editar amistoso vs ' + doc.rival : 'Nuevo amistoso';
+    if (doc) {
+      campoAmis('rival').value = doc.rival || '';
+      campoAmis('lugar').value = doc.lugar || '';
+      campoAmis('fecha').value = doc.fecha || '';
+      campoAmis('valor').value = String(Number(doc.valor) || 0);
+      for (const r of formAmis.querySelectorAll('[name="modo"]')) r.checked = r.value === (doc.modo === 'jugador' ? 'jugador' : 'total');
+    }
+    formAmis.hidden = false;
+    dash.draw('form-amistoso-jugadores');
+    pintarReparto();
+    formAmis.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    campoAmis('rival').focus({ preventScroll: true });
+  };
+  const cerrarFormAmistoso = () => { if (!formAmis) return; formAmis.hidden = true; formAmis.reset(); avisar(formAmis, null); T.formAmistoso = null; };
+  registrarCuadro('amistoso-form', () => Boolean(formAmis && !formAmis.hidden), cerrarFormAmistoso);
+  registrarCuadro('amistoso-borrar', () => Boolean(T.amistosoBorrar), () => { T.amistosoBorrar = null; dash.draw('amistosos'); });
+  for (const b of document.querySelectorAll('[data-amistoso-nuevo]')) b.addEventListener('click', () => abrirFormAmistoso(null));
+  if (formAmis) {
+    formAmis.querySelector('[data-form-amistoso="cancelar"]').addEventListener('click', cerrarFormAmistoso);
+    formAmis.addEventListener('change', (e) => {
+      const cb = e.target.closest('input[name="amistoso-jugador"]');
+      if (cb && T.formAmistoso) { if (cb.checked) T.formAmistoso.jugadores.add(cb.value); else T.formAmistoso.jugadores.delete(cb.value); }
+      pintarReparto();
+    });
+    formAmis.addEventListener('input', pintarReparto);
+    formAmis.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!T.formAmistoso) return;
+      const rival = String(campoAmis('rival').value || '').trim().replace(/\s+/g, ' ');
+      const lugar = String(campoAmis('lugar').value || '').trim().replace(/\s+/g, ' ');
+      const fecha = String(campoAmis('fecha').value || '');
+      const valorTxt = String(campoAmis('valor').value || '').trim();
+      const valor = Number(valorTxt);
+      if (!rival) { avisar(formAmis, 'rival'); return; }
+      if (valorTxt === '' || !Number.isFinite(valor) || valor < 0) { avisar(formAmis, 'valor'); return; }
+      const jugadores = jugadoresAmis().map((j) => j.replace(/,/g, ''));
+      if (!jugadores.length) { avisar(formAmis, 'jugadores'); return; }
+      const enviar = formAmis.querySelector('[type="submit"]');
+      if (enviar) enviar.disabled = true;
+      avisar(formAmis, null);
+      try {
+        const db = await baseDatos();
+        const datosPartido = { rival, lugar, fecha, valor: Math.round(valor), modo: modoAmis(), jugadores: jugadores.join(','), creado: T.formAmistoso.creado || new Date().toISOString() };
+        if (T.formAmistoso.id) await db.doc(RUTA_AMISTOSOS + '/' + T.formAmistoso.id).set(datosPartido);
+        else await db.collection(RUTA_AMISTOSOS).add(datosPartido);
+        cerrarFormAmistoso();
+      } catch {
+        avisar(formAmis, 'error');
+      } finally {
+        if (enviar) enviar.disabled = false;
+      }
+    });
+  }
+  if (seccionAmis) {
+    const avisoAmis = seccionAmis.querySelector('[data-msg-amistoso]');
+    seccionAmis.addEventListener('click', async (e) => {
+      const editar = e.target.closest('[data-amistoso-editar]');
+      if (editar) { abrirFormAmistoso(editar.dataset.amistosoEditar); return; }
+      const borrar = e.target.closest('[data-amistoso-borrar]');
+      if (borrar) { soloEste('amistoso-borrar'); T.amistosoBorrar = borrar.dataset.amistosoBorrar; dash.draw('amistosos'); return; }
+      if (e.target.closest('[data-amistoso-no]')) { T.amistosoBorrar = null; dash.draw('amistosos'); return; }
+      const si = e.target.closest('[data-amistoso-si]');
+      const chip = e.target.closest('[data-amis-jug]');
+      if (!si && !chip) return;
+      const b = si || chip;
+      b.disabled = true;
+      if (avisoAmis) avisoAmis.hidden = true;
+      try {
+        const db = await baseDatos();
+        if (si) {
+          await db.doc(RUTA_AMISTOSOS + '/' + si.dataset.amistosoSi).delete();
+          T.amistosoBorrar = null;
+        } else {
+          if (!document.querySelector('.tb.puede-pagos, .tb.puede-ligas')) return;
+          const partido = chip.closest('[data-amistoso]').dataset.amistoso;
+          const p = datos('amistosos_todos').find((x) => x.id === partido);
+          const j = p && p.jugadores.find((x) => x.jugador === chip.dataset.amisJug);
+          if (!j) return;
+          await db.doc(RUTA_AMISTOSOS_PAGOS + '/' + partido + '~' + (T.slug(j.jugador) || 'jugador')).set({ partido, jugador: j.jugador, estado: j.estado === 'Pagado' ? 'Debe' : 'Pagado', registrado: new Date().toISOString() });
+        }
+      } catch {
+        b.disabled = false;
+        if (avisoAmis) avisoAmis.hidden = false;
+      }
+    });
+  }
+  dash.onData(() => {
+    const ficha = document.getElementById('ficha-amistosos');
+    if (ficha) ficha.hidden = datos('amistosos_todos').length === 0;
+  });
+
   // Formulario de liga (nueva o editar)
   const formLiga = document.getElementById('form-liga');
   const abrirFormLiga = (liga) => {
@@ -2301,6 +2526,88 @@ dash.draw('form-jugador-ligas', (span) => {
     cb.checked = T.formJugadorLigas.has(l.key);
     lab.append(cb, document.createTextNode(l.corto));
     return lab;
+  }));
+});
+
+dash.draw('form-amistoso-jugadores', (box) => {
+  const s = dash.data('plantel');
+  const elegidos = T.formAmistoso ? [...T.formAmistoso.jugadores] : [];
+  if (s.status !== 'ok') { box.replaceChildren(T.el('p', 'tb-note', s.status === 'loading' ? 'Cargando jugadores…' : 'No se pudo cargar el plantel.')); return; }
+  const nombres = s.data.map((p) => p.jugador);
+  for (const n of elegidos) if (!nombres.some((x) => x.toLowerCase() === n.toLowerCase())) nombres.push(n);
+  box.replaceChildren(...nombres.map((n) => {
+    const id = 'amistoso-jugador-' + T.slug(n);
+    const lab = T.el('label');
+    lab.htmlFor = id;
+    const cb = T.el('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.name = 'amistoso-jugador';
+    cb.value = n;
+    cb.checked = elegidos.some((x) => x.toLowerCase() === n.toLowerCase());
+    lab.append(cb, document.createTextNode(n));
+    return lab;
+  }));
+});
+
+dash.draw('amistosos', (cont) => {
+  const s = dash.data('amistosos_todos');
+  if (s.status !== 'ok') { cont.replaceChildren(T.el('p', 'tb-note', s.status === 'loading' ? 'Cargando amistosos…' : 'No se pudieron cargar los amistosos.')); return; }
+  if (!s.data.length) { cont.replaceChildren(T.el('p', 'tb-note tb-vacio', 'Todavía no hay partidos amistosos.')); return; }
+  const puedeMarcar = Boolean(document.querySelector('.tb.puede-pagos, .tb.puede-ligas'));
+  const abierto = T.amistosoBorrar;
+  cont.replaceChildren(...s.data.map((p) => {
+    const card = T.el('article', 'tb-amistoso');
+    card.dataset.amistoso = p.id;
+    const top = T.el('div', 'tb-amistoso-top');
+    const h = T.el('h3', null, 'vs ' + p.rival);
+    const estado = T.el('span', 'tb-chip ' + (p.pendiente > 0 ? 'is-bad' : 'is-ok'), p.pendiente > 0 ? 'Pendiente ' + T.clp(p.pendiente) : 'Al día');
+    top.append(h, estado);
+    const n = p.jugadores.length;
+    const info = T.el('div', 'tb-amistoso-info');
+    const cuandoDonde = [p.fecha ? T.fechaCorta(p.fecha) : '', p.lugar].filter(Boolean).join(' · ');
+    if (cuandoDonde) info.append(T.el('p', null, cuandoDonde));
+    info.append(T.el('p', null, p.modo === 'jugador'
+      ? 'Arbitraje ' + T.clp(p.valor) + ' por jugador (total ' + T.clp(p.total) + ')'
+      : 'Arbitraje ' + T.clp(p.valor) + ' en total' + (n ? ' · ' + (p.exacto ? '' : '≈ ') + T.clp(p.cuota) + ' c/u' : '')));
+    const ul = T.el('ul', 'tb-amistoso-jugadores');
+    ul.setAttribute('aria-label', 'Jugadores');
+    for (const j of p.jugadores) {
+      const li = T.el('li');
+      const pago = j.estado === 'Pagado';
+      const chip = T.el(puedeMarcar ? 'button' : 'span', 'tb-amis-jug ' + (pago ? 'is-ok' : 'is-bad'));
+      chip.append(T.el('span', null, j.jugador), T.el('b', null, pago ? 'Pagó' : 'Debe ' + T.clp(j.monto)));
+      if (puedeMarcar) {
+        chip.type = 'button';
+        chip.dataset.amisJug = j.jugador;
+        chip.setAttribute('aria-label', j.jugador + ': ' + (pago ? 'pagó' : 'debe ' + T.clp(j.monto)) + '. Tocar para marcar que ' + (pago ? 'debe' : 'pagó') + '.');
+      }
+      li.append(chip);
+      ul.append(li);
+    }
+    const pie = T.el('p', 'tb-amistoso-pie', p.pagados + ' de ' + n + ' pagaron · recaudado ' + T.clp(p.recaudado) + ' de ' + T.clp(p.total));
+    const acciones = T.el('div', 'tb-amistoso-acciones tb-solo-editor');
+    acciones.dataset.perm = 'ligas';
+    const editar = T.el('button', 'tb-link', 'Editar amistoso');
+    editar.type = 'button';
+    editar.dataset.amistosoEditar = p.id;
+    const borrar = T.el('button', 'tb-link is-bad', 'Borrar');
+    borrar.type = 'button';
+    borrar.dataset.amistosoBorrar = p.id;
+    acciones.append(editar, borrar);
+    const confirmar = T.el('p', 'tb-amistoso-confirmar tb-solo-editor');
+    confirmar.dataset.perm = 'ligas';
+    confirmar.dataset.slot = 'confirmar';
+    confirmar.hidden = abierto !== p.id;
+    const si = T.el('button', 'tb-link is-bad', 'Sí, borrar');
+    si.type = 'button';
+    si.dataset.amistosoSi = p.id;
+    const no = T.el('button', 'tb-link', 'No');
+    no.type = 'button';
+    no.dataset.amistosoNo = p.id;
+    confirmar.append(document.createTextNode('¿Borrar el amistoso vs ' + p.rival + '? Se borran también sus pagos. '), si, document.createTextNode(' · '), no);
+    card.append(top, info, ul, pie, acciones, confirmar);
+    return card;
   }));
 });
 

@@ -9,7 +9,7 @@ Cualquiera con el enlace puede **ver** la página. Para **editar** hay que tocar
 - **Administrador principal:** usuario `admin` (se cambia con la variable `ADMIN_USUARIO`) y la contraseña de la variable `CLAVE_EDITOR` de Vercel. Puede editar todo y tiene la pestaña **Administradores**.
 - **Otros administradores:** el principal los crea en la pestaña Administradores con nombre, usuario, contraseña y las secciones que pueden editar:
   - **Pagos:** marcar arbitraje e inscripciones ("Editar pagos").
-  - **Ligas:** crear, editar y eliminar ligas.
+  - **Ligas:** crear, editar y eliminar ligas, y crear, editar y borrar **partidos amistosos** (pestaña Amistosos). Con **Pagos** o **Ligas** se puede marcar quién pagó el arbitraje de un amistoso.
   - **Jugadores:** agregar, quitar y restaurar jugadores.
   - **Camisetas:** agregar, editar (lápiz) y quitar camisetas, préstamos y devoluciones, marcar qué camisetas del equipo están disponibles (botón **Marcar disponibles**) y editar las filas del **Pedido de camisetas**.
 - Cada uno ve solo los botones de lo que puede editar, y el servidor rechaza lo demás.

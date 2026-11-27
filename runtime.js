@@ -29,6 +29,8 @@
     camisetas_prestamos: 'camisetas_prestamos',
     camisetas_no_disponibles: 'camisetas_no_disponibles',
     pedidos_cambios: 'camisetas_pedidos_cambios',
+    amistosos: 'amistosos',
+    amistosos_pagos: 'amistosos_pagos',
   };
   const RUTAS = {
     'data/plantel/extra': 'plantel_extra',
@@ -42,6 +44,8 @@
     'data/camisetas/prestamos': 'camisetas_prestamos',
     'data/camisetas/no-disponibles': 'camisetas_no_disponibles',
     'data/camisetas/pedido-cambios': 'camisetas_pedidos_cambios',
+    'data/amistosos/partidos': 'amistosos',
+    'data/amistosos/pagos': 'amistosos_pagos',
   };
   const PERMISOS = ['pagos', 'ligas', 'jugadores', 'camisetas'];
   const NOMBRE_PERMISO = { pagos: 'Pagos', ligas: 'Ligas', jugadores: 'Jugadores', camisetas: 'Camisetas' };
@@ -235,6 +239,15 @@
         if (borra) return 'Volvió el pedido de camiseta n.º ' + d.numero + ' (' + para + ') a como está en la planilla';
         return 'Editó el pedido de camiseta n.º ' + d.numero + ' (' + para + ')' + (d.cambios ? ': ' + d.cambios : '');
       }
+      case 'amistosos': {
+        const cual = 'el amistoso vs ' + (d.rival || '') + (d.fecha ? ' (' + d.fecha.split('-').reverse().join('/') + ')' : '');
+        if (borra) return 'Borró ' + cual;
+        return (c.op === 'add' ? 'Creó ' : 'Editó ') + cual;
+      }
+      case 'amistosos_pagos': {
+        const p = (estado.colecciones.amistosos || []).find((x) => x.id === d.partido);
+        return 'Amistoso vs ' + (p ? p.rival : '?') + ': ' + d.jugador + ' → ' + (d.estado === 'Pagado' ? 'pagó' : 'debe');
+      }
       case 'camisetas_prestamos':
         if (borra) return 'Marcó como devuelta la ' + camiseta(d) + (d.a ? ' (estaba con ' + d.a + ')' : '');
         return 'Prestó la ' + camiseta(d) + ' a ' + (d.a || 'alguien');
@@ -317,6 +330,7 @@
       const jugadores = document.getElementById('tab-jugadores');
       if (jugadores) jugadores.click();
     }
+    if (domListo) redibujar();
   }
 
   function cerrarSesion() {
